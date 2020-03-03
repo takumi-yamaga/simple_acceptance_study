@@ -48,7 +48,7 @@ RunAction::RunAction()
   // Default settings
   analysisManager->SetNtupleMerging(true);
   analysisManager->SetVerboseLevel(1);
-  analysisManager->SetFileName("proton_pol");
+  analysisManager->SetFileName("hodoscope");
 
   // Creating 1D histograms
   analysisManager // H1-ID = 0

@@ -30,20 +30,13 @@
 #ifndef EventAction_h
 #define EventAction_h 1
 
+#include "Constants.hh"
 
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 
 #include <vector>
 #include <array>
-
-// named constants
-const G4int kTotalDCs = 2;
-const G4int kTotalHistogramsForDC = 3;
-const G4int kTotalHistogramsForAnalysis = 6;
-
-const G4int kDCINId = 0;
-const G4int kDCOUTId = 1;
 
 /// Event action
 
@@ -58,10 +51,7 @@ public:
 
 private:
     // hit collections Ids
-    std::array<G4int, kTotalDCs> dc_hitcollection_id_;
-    // histograms Ids
-    std::array<std::array<G4int, kTotalDCs>, kTotalHistogramsForDC> dc_histogram_id_;
-    std::array<G4int, kTotalHistogramsForAnalysis> analysis_histogram_id_;
+    std::array<G4int, Hodoscope::kTotalNumber> hodoscope_hitscollection_id_;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

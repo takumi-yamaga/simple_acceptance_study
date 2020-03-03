@@ -28,6 +28,7 @@
 /// \brief Implementation of the HodoscopeHit class
 
 #include "HodoscopeHit.hh"
+#include "Constants.hh"
 
 #include "G4VVisManager.hh"
 #include "G4VisAttributes.hh"
@@ -49,14 +50,7 @@ G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
 
 HodoscopeHit::HodoscopeHit()
 : G4VHit(), 
-  track_id_(-1), parent_id_(-1), particle_id_(-1), layer_id_(-1), hit_time_(0.), local_position_(0), global_position_(0), momentum_(0), polarization_(0)
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-HodoscopeHit::HodoscopeHit(G4int layer_id)
-: G4VHit(), 
-  track_id_(layer_id),parent_id_(layer_id),particle_id_(layer_id),layer_id_(layer_id), hit_time_(0.), local_position_(0), global_position_(0), momentum_(0), polarization_(0)
+  track_id_(-1), parent_id_(-1), particle_id_(-1), segment_id_(-1), hit_time_(0.), local_position_(0), global_position_(0), momentum_(0), polarization_(0), position_(0), logical_(nullptr)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -71,12 +65,15 @@ HodoscopeHit::HodoscopeHit(const HodoscopeHit &right)
   track_id_(right.track_id_),
   parent_id_(right.parent_id_),
   particle_id_(right.particle_id_),
-  layer_id_(right.layer_id_),
+  segment_id_(right.segment_id_),
   hit_time_(right.hit_time_),
   local_position_(right.local_position_),
   global_position_(right.global_position_),
   momentum_(right.momentum_),
-  polarization_(right.polarization_)
+  polarization_(right.polarization_),
+  position_(right.position_),
+  rotation_(right.rotation_),
+  logical_(right.logical_)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -86,12 +83,15 @@ const HodoscopeHit& HodoscopeHit::operator=(const HodoscopeHit &right)
   track_id_ = right.track_id_;
   parent_id_ = right.parent_id_;
   particle_id_ = right.particle_id_;
-  layer_id_ = right.layer_id_;
+  segment_id_ = right.segment_id_;
   hit_time_ = right.hit_time_;
   local_position_ = right.local_position_;
   global_position_ = right.global_position_;
   momentum_ = right.momentum_;
   polarization_ = right.polarization_;
+  position_ = right.position_;
+  rotation_ = right.rotation_;
+  logical_ = right.logical_;
   return *this;
 }
 
@@ -106,38 +106,50 @@ G4bool HodoscopeHit::operator==(const HodoscopeHit &/*right*/) const
 
 void HodoscopeHit::Draw()
 {
-  auto visManager = G4VVisManager::GetConcreteInstance();
-  if (! visManager) return;
+  auto vis_manager = G4VVisManager::GetConcreteInstance();
+  if (! vis_manager) return;
+  G4VisAttributes attributes;
 
+  // hit point
   G4Circle circle(global_position_);
-  circle.SetScreenSize(2);
+  circle.SetScreenSize(10);
   circle.SetFillStyle(G4Circle::filled);
-  G4VisAttributes attribs(G4Colour::Red());
-  circle.SetVisAttributes(attribs);
-  visManager->Draw(circle);
+  attributes.SetColour(MyColour::Hit());
+  circle.SetVisAttributes(attributes);
+  vis_manager->Draw(circle);
+
+  // hit segment
+  auto logical_attributes = logical_->GetVisAttributes();
+  if (logical_attributes){
+    attributes = *logical_attributes;
+    attributes.SetColour(MyColour::ScintillatorHasHit());
+    attributes.SetForceSolid(true); // drawing solid shape
+    G4Transform3D transform(rotation_.inverse(),position_);
+    vis_manager->Draw(*logical_,attributes,transform);
+  }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const std::map<G4String,G4AttDef>* HodoscopeHit::GetAttDefs() const
 {
-  G4bool isNew;
-  auto store = G4AttDefStore::GetInstance("HodoscopeHit",isNew);
+  G4bool is_new;
+  auto store = G4AttDefStore::GetInstance("HodoscopeHit",is_new);
 
-  if (isNew) {
-      (*store)["HitType"] 
-        = G4AttDef("HitType","Hit Type","Physics","","G4String");
-      
-      (*store)["ID"] 
-        = G4AttDef("ID","ID","Physics","","G4int");
-      
-      (*store)["Time"] 
-        = G4AttDef("Time","Time","Physics","G4BestUnit","G4double");
-      
-      (*store)["Pos"] 
-        = G4AttDef("Pos", "Position", "Physics","G4BestUnit","G4ThreeVector");
+  if (is_new) {
+    (*store)["HitType"] 
+      = G4AttDef("HitType","Hit Type","Physics","","G4String");
+
+    (*store)["ID"] 
+      = G4AttDef("ID","ID","Physics","","G4int");
+
+    (*store)["Time"] 
+      = G4AttDef("Time","Time","Physics","G4BestUnit","G4double");
+
+    (*store)["Pos"] 
+      = G4AttDef("Pos", "Position", "Physics","G4BestUnit","G4ThreeVector");
   }
-  
+
   return store;
 }
 
@@ -146,16 +158,16 @@ const std::map<G4String,G4AttDef>* HodoscopeHit::GetAttDefs() const
 std::vector<G4AttValue>* HodoscopeHit::CreateAttValues() const
 {
   auto values = new std::vector<G4AttValue>;
-  
+
   values
     ->push_back(G4AttValue("HitType","HodoscopeHit",""));
   values
-    ->push_back(G4AttValue("ID",G4UIcommand::ConvertToString(layer_id_),""));
+    ->push_back(G4AttValue("ID",G4UIcommand::ConvertToString(segment_id_),""));
   values
-    ->push_back(G4AttValue("Time",G4BestUnit(global_position_,"Time"),""));
+    ->push_back(G4AttValue("Time",G4BestUnit(hit_time_,"Time"),""));
   values
     ->push_back(G4AttValue("Position",G4BestUnit(global_position_,"Length"),""));
-  
+
   return values;
 }
 
@@ -163,9 +175,11 @@ std::vector<G4AttValue>* HodoscopeHit::CreateAttValues() const
 
 void HodoscopeHit::Print()
 {
-  //G4cout << "  Layer[" << fLayerID << "] : time " << fTime/ns
-  //<< " (nsec) --- local (x,y) " << fLocalPos.x()
-  //<< ", " << fLocalPos.y() << G4endl;
+  G4cout << "-------------------------------------" << G4endl;
+  G4cout << " segment    : " << segment_id_ << G4endl;
+  G4cout << " global pos : " << global_position_.x() << ", " << global_position_.y() 
+    << ", " << global_position_.z() << G4endl;
+  G4cout << "-------------------------------------" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

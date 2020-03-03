@@ -41,9 +41,9 @@
 
 HodoscopeSD::HodoscopeSD(G4String name)
 : G4VSensitiveDetector(name), 
-  fHitsCollection(nullptr), fHCID(-1)
+  hits_collection_(nullptr), hits_collection_id_(-1)
 {
-  collectionName.insert("dc_hitcollection");
+  collectionName.insert("hodoscope_hitscollection");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -53,55 +53,61 @@ HodoscopeSD::~HodoscopeSD()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeSD::Initialize(G4HCofThisEvent* hce)
+void HodoscopeSD::Initialize(G4HCofThisEvent* collection)
 {
-  fHitsCollection 
+  hits_collection_
     = new HodoscopeHitsCollection(SensitiveDetectorName,collectionName[0]);
 
-  if (fHCID<0) { 
-     fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection); 
+  if (hits_collection_id_<0) { 
+    hits_collection_id_ = G4SDManager::GetSDMpointer()->GetCollectionID(hits_collection_); 
   }
-  hce->AddHitsCollection(fHCID,fHitsCollection);
+  collection->AddHitsCollection(hits_collection_id_,hits_collection_);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
 {
+  auto energy_deposit = step->GetTotalEnergyDeposit();
+  if(energy_deposit==0.) return true;
+
   auto track = step->GetTrack();
+  auto pre_steppoint = step->GetPreStepPoint();
+  auto touchable = pre_steppoint->GetTouchable();
+  auto physical = touchable->GetVolume(0);
+  auto transform = touchable->GetHistory()->GetTopTransform();
+  auto logical = physical->GetLogicalVolume();
 
-  auto charge = track->GetDefinition()->GetPDGCharge();
-  if (charge==0.) return true;
-
-  auto particle_id = track->GetParticleDefinition()->GetPDGEncoding();
-  if(particle_id != 2212) return true;
-
+  auto track_id = track->GetTrackID();
   auto parent_id = track->GetParentID();
-  if(parent_id != 0) return true;
-  
-  auto preStepPoint = step->GetPreStepPoint();
+  auto particle_id = track->GetParticleDefinition()->GetPDGEncoding();
+  auto segment_id = physical->GetCopyNo();
+  auto hit_time = pre_steppoint->GetGlobalTime();
+  auto global_position = pre_steppoint->GetPosition();
+  auto local_position = transform.TransformPoint(global_position);
+  auto momentum = pre_steppoint->GetMomentum();
+  auto polarization = track->GetPolarization();
 
-  auto touchable = step->GetPreStepPoint()->GetTouchable();
-  auto motherPhysical = touchable->GetVolume(1); // mother
-  auto copyNo = motherPhysical->GetCopyNo();
+  auto position = transform.NetTranslation();
+  auto rotation = transform.NetRotation();
 
-  auto global_position = preStepPoint->GetPosition();
-  auto local_position
-    = touchable->GetHistory()->GetTopTransform().TransformPoint(global_position);
-
-  auto hit = new HodoscopeHit(copyNo);
-  hit->SetGlobalPosition(global_position);
-  hit->SetLocalPosition(local_position);
-  hit->SetHitTime(preStepPoint->GetGlobalTime());
-  hit->SetMomentum(preStepPoint->GetMomentum());
-  hit->SetPolarization(track->GetPolarization());
-  hit->SetTrackID(track->GetTrackID());
+  auto hit = new HodoscopeHit();
+  hit->SetTrackID(track_id);
   hit->SetParentID(parent_id);
   hit->SetParticleID(particle_id);
-  
-  fHitsCollection->insert(hit);
-  
+  hit->SetSegmentID(segment_id);
+  hit->SetHitTime(hit_time);
+  hit->SetEnergyDeposit(energy_deposit);
+  hit->SetGlobalPosition(global_position);
+  hit->SetLocalPosition(local_position);
+  hit->SetMomentum(momentum);
+  hit->SetPolarization(polarization);
+  hit->SetLogicalVolume(logical);
+  hit->SetPosition(position);
+  hit->SetRotation(rotation);
+
+  hits_collection_->insert(hit);
+
   return true;
 }
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

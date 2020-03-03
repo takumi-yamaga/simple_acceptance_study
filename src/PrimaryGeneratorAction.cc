@@ -43,7 +43,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
 : G4VUserPrimaryGeneratorAction(),     
   particlegun_(nullptr), messenger_(nullptr), 
   proton_(nullptr),
-  momentum_(200.*MeV),
+  momentum_(2.*GeV),
   randomize_primary_(false)
 {
   G4int num_particle = 1;
@@ -53,7 +53,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
   proton_ = particleTable->FindParticle("proton");
   
   // default particle kinematics
-  particlegun_->SetParticlePosition(G4ThreeVector(0.,0.,-50.*mm));
+  particlegun_->SetParticlePosition(G4ThreeVector(0.,0.,-250.*mm));
   particlegun_->SetParticleDefinition(proton_);
   
   // define commands for this class

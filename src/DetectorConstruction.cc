@@ -88,13 +88,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Construct materials
   ConstructMaterials();
   auto air = G4Material::GetMaterial("G4_AIR");
-  auto vacuum = G4Material::GetMaterial("G4_Galactic");
-  auto argonGas = G4Material::GetMaterial("G4_Ar");
   auto scintillator = G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
-  auto csI = G4Material::GetMaterial("G4_CESIUM_IODIDE");
-  auto lead = G4Material::GetMaterial("G4_Pb");
-  auto carbon = G4Material::GetMaterial("G4_C");
-  auto hydrogen = new G4Material("hydrogne", 1., 1.01*g/mole, 1.*g/cm3);
+  //auto vacuum = G4Material::GetMaterial("G4_Galactic");
+  //auto argonGas = G4Material::GetMaterial("G4_Ar");
+  //auto csI = G4Material::GetMaterial("G4_CESIUM_IODIDE");
+  //auto lead = G4Material::GetMaterial("G4_Pb");
+  //auto carbon = G4Material::GetMaterial("G4_C");
+  //auto hydrogen = new G4Material("hydrogne", 1., 1.01*g/mole, 1.*g/cm3);
 
   // Option to switch on/off checking of volumes overlaps
   //
@@ -112,9 +112,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         false,0,kCheckOverlaps);
 
   // hodoscope1
-  auto hodoscope1_size_x = 10.*mm;
-  auto hodoscope1_size_y = 50.*mm;
-  auto hodoscope1_thickness = 10.*mm;
+  auto hodoscope1_size_x = 100.*mm;
+  auto hodoscope1_size_y = 100.*mm;
+  auto hodoscope1_thickness = 50.*mm;
 
   auto hodoscope1_position = G4ThreeVector(0.*mm,0.*mm,-100.*mm);
   auto hodoscope1_solid 
@@ -125,9 +125,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       world_logical,false,0,kCheckOverlaps);
 
   // hodoscope2
-  auto hodoscope2_size_x = 10.*mm;
-  auto hodoscope2_size_y = 50.*mm;
-  auto hodoscope2_thickness = 10.*mm;
+  auto hodoscope2_size_x = 100.*mm;
+  auto hodoscope2_size_y = 100.*mm;
+  auto hodoscope2_thickness = 50.*mm;
 
   auto hodoscope2_position = G4ThreeVector(0.*mm,0.*mm,100.*mm);
   auto hodoscope2_solid 
@@ -159,14 +159,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 void DetectorConstruction::ConstructSDandField()
 {
   auto sdManager = G4SDManager::GetSDMpointer();
-  G4String SDname;
+  G4String sensitive_detector_name;
 
   // sensitive detectors -----------------------------------------------------
-  auto hodoscope1 = new HodoscopeSD(SDname="/hodoscope1");
+  auto hodoscope1 = new HodoscopeSD(sensitive_detector_name="/hodoscope1");
   sdManager->AddNewDetector(hodoscope1);
   hodoscope1_logical_->SetSensitiveDetector(hodoscope1);
 
-  auto hodoscope2 = new HodoscopeSD(SDname="/hodoscope2");
+  auto hodoscope2 = new HodoscopeSD(sensitive_detector_name="/hodoscope2");
   sdManager->AddNewDetector(hodoscope2);
   hodoscope2_logical_->SetSensitiveDetector(hodoscope2);
 

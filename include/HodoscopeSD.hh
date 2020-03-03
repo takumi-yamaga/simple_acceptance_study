@@ -50,8 +50,8 @@ class HodoscopeSD : public G4VSensitiveDetector
     virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
     
   private:
-    HodoscopeHitsCollection* fHitsCollection;
-    G4int fHCID;
+    HodoscopeHitsCollection* hits_collection_;
+    G4int hits_collection_id_;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

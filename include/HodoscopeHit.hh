@@ -41,6 +41,8 @@
 class G4AttDef;
 class G4AttValue;
 
+using std::vector
+
 /// Drift chamber hit
 ///
 /// It records:
@@ -52,7 +54,6 @@ class HodoscopeHit : public G4VHit
 {
   public:
     HodoscopeHit();
-    HodoscopeHit(G4int layerID);
     HodoscopeHit(const HodoscopeHit &right);
     virtual ~HodoscopeHit();
 
@@ -64,10 +65,11 @@ class HodoscopeHit : public G4VHit
     
     virtual void Draw();
     virtual const std::map<G4String,G4AttDef>* GetAttDefs() const;
-    virtual std::vector<G4AttValue>* CreateAttValues() const;
+    virtual vector<G4AttValue>* CreateAttValues() const;
     virtual void Print();
 
     inline void SetTrackID(G4int id) { track_id_ = id; }
+    inline void AddTrackID(G4int id) { track_id_ = id; }
     inline G4int GetTrackID() const { return track_id_; }
 
     inline void SetParentID(G4int id) { parent_id_ = id; }
@@ -76,11 +78,14 @@ class HodoscopeHit : public G4VHit
     inline void SetParticleID(G4int id) { particle_id_ = id; }
     inline G4int GetParticleID() const { return particle_id_; }
 
-    inline void SetLayerID(G4int id) { layer_id_ = id; }
-    inline G4int GetLayerID() const { return layer_id_; }
+    inline void SetSegmentID(G4int id) { segment_id_ = id; }
+    inline G4int GetSegmentID() const { return segment_id_; }
 
     inline void SetHitTime(G4double time) { hit_time_ = time; }
     inline G4double GetHitTime() const { return hit_time_; }
+
+    inline void SetEnergyDeposit(G4double de) { energy_deposit_ = de; }
+    inline G4double GetEnergyDeposit() const { return energy_deposit_; }
 
     inline void SetLocalPosition(G4ThreeVector position) { local_position_ = position; }
     inline G4ThreeVector GetLocalPosition() const { return local_position_; }
@@ -94,16 +99,29 @@ class HodoscopeHit : public G4VHit
     inline void SetPolarization(G4ThreeVector polarization) { polarization_ = polarization; }
     inline G4ThreeVector GetPolarization() const { return polarization_; }
     
+    inline void SetPosition(G4ThreeVector position) { position_ = position; }
+    inline G4ThreeVector GetPosition() const { return position_; }
+    
+    inline void SetRotation(G4RotationMatrix rotation) { rotation_ = rotation; }
+    inline G4RotationMatrix GetRotation() const { return rotation_; }
+
+    inline void SetLogicalVolume(G4LogicalVolume* logical) { logical_ = logical; }
+    inline G4LogicalVolume* GetLogicalVolume() const { return logical_; }
+    
   private:
     G4int track_id_;
     G4int parent_id_;
     G4int particle_id_;
-    G4int layer_id_;
+    G4int segment_id_;
     G4double hit_time_;
+    G4double energy_deposit_;
     G4ThreeVector local_position_;
     G4ThreeVector global_position_;
     G4ThreeVector momentum_;
     G4ThreeVector polarization_;
+    G4ThreeVector position_;
+    G4RotationMatrix rotation_;
+    G4LogicalVolume* logical_;
 };
 
 using HodoscopeHitsCollection = G4THitsCollection<HodoscopeHit>;
