@@ -50,7 +50,7 @@ G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
 
 HodoscopeHit::HodoscopeHit()
 : G4VHit(), 
-  track_id_(-1), parent_id_(-1), particle_id_(-1), segment_id_(-1), hit_time_(0.), local_position_(0), global_position_(0), momentum_(0), polarization_(0), position_(0), logical_(nullptr)
+  segment_id_(-1), momentum_(0), polarization_(0), position_(0), logical_(nullptr)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
