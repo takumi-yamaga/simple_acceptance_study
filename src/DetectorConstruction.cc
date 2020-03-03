@@ -116,12 +116,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto hodoscope1_size_y = 50.*mm;
   auto hodoscope1_thickness = 10.*mm;
 
-  auto hodoscope1_position = G4ThreeVector(-30.*mm,0.*mm,0.*mm);
+  auto hodoscope1_position = G4ThreeVector(0.*mm,0.*mm,-100.*mm);
   auto hodoscope1_solid 
     = new G4Box("hodoscope1_solid",hodoscope1_size_x/2.,hodoscope1_size_y/2.,hodoscope1_thickness/2.);
   hodoscope1_logical_
     = new G4LogicalVolume(hodoscope1_solid,scintillator,"hodoscope1_logical");
-  G4PVPlacement(0,hodoscope1_position,hodoscope1_logical_,"hodoscope1_physical",
+  new G4PVPlacement(0,hodoscope1_position,hodoscope1_logical_,"hodoscope1_physical",
       world_logical,false,0,kCheckOverlaps);
 
   // hodoscope2
@@ -129,7 +129,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto hodoscope2_size_y = 50.*mm;
   auto hodoscope2_thickness = 10.*mm;
 
-  auto hodoscope2_position = G4ThreeVector(30.*mm,0.*mm,0.*mm);
+  auto hodoscope2_position = G4ThreeVector(0.*mm,0.*mm,100.*mm);
   auto hodoscope2_solid 
     = new G4Box("hodoscope2_solid",hodoscope2_size_x/2.,hodoscope2_size_y/2.,hodoscope2_thickness/2.);
   hodoscope2_logical_
@@ -144,13 +144,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   world_logical->SetVisAttributes(visAttributes);
   fVisAttributes.push_back(visAttributes);
 
-  visAttributes = new G4VisAttributes(G4Colour::Red());
+  visAttributes = new G4VisAttributes(MyColour::Scintillator());
   hodoscope1_logical_->SetVisAttributes(visAttributes);
-  fVisAttributes.push_back(visAttributes);
-  visAttributes = new G4VisAttributes(G4Colour::Blue());
   hodoscope2_logical_->SetVisAttributes(visAttributes);
   fVisAttributes.push_back(visAttributes);
-
 
   // return the world physical volume ----------------------------------------
 

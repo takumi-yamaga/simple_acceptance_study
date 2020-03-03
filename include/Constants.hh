@@ -46,7 +46,7 @@ constexpr G4int kNofHadCells = kNofHadColumns * kNofHadRows;
 namespace MyColour{
   // G4Colour(red, green, blue, alpha)
   // alpha = 1. - transparency
-  inline G4Colour Scintillator(){ return G4Colour(0.0,1.0,1.0,0.2); }
+  inline G4Colour Scintillator(){ return G4Colour(0.2,1.0,1.0,0.2); }
 }
 
 #endif
