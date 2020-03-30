@@ -91,22 +91,42 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   auto position = transform.NetTranslation();
   auto rotation = transform.NetRotation();
 
-  auto hit = new HodoscopeHit();
-  hit->SetTrackID(track_id);
-  hit->SetParentID(parent_id);
-  hit->SetParticleID(particle_id);
-  hit->SetSegmentID(segment_id);
-  hit->SetHitTime(hit_time);
-  hit->SetEnergyDeposit(energy_deposit);
-  hit->SetGlobalPosition(global_position);
-  hit->SetLocalPosition(local_position);
-  hit->SetMomentum(momentum);
-  hit->SetPolarization(polarization);
-  hit->SetLogicalVolume(logical);
-  hit->SetPosition(position);
-  hit->SetRotation(rotation);
-
-  hits_collection_->insert(hit);
+  G4bool segment_has_hit = false;
+  for(auto i_hit=0; i_hit<hits_collection_->entries(); i_hit++){
+    auto hit = (*hits_collection_)[i_hit];
+    if(hit->GetSegmentID()==segment_id){
+      segment_has_hit = true;
+      hit->PushTotalHits();
+      hit->PushTrackID(track_id);
+      hit->PushParentID(parent_id);
+      hit->PushParticleID(particle_id);
+      hit->PushHitTime(hit_time);
+      hit->PushEnergyDeposit(energy_deposit);
+      hit->PushGlobalPosition(global_position);
+      hit->PushLocalPosition(local_position);
+      hit->PushMomentum(momentum);
+      hit->PushPolarization(polarization);
+    }
+  }
+  // if there is no hit in the segment, create new hit.
+  if(!segment_has_hit){
+    auto hit = new HodoscopeHit();
+    hit->SetSegmentID(segment_id);
+    hit->SetLogicalVolume(logical);
+    hit->SetPosition(position);
+    hit->SetRotation(rotation);
+    hit->PushTotalHits();
+    hit->PushTrackID(track_id);
+    hit->PushParentID(parent_id);
+    hit->PushParticleID(particle_id);
+    hit->PushHitTime(hit_time);
+    hit->PushEnergyDeposit(energy_deposit);
+    hit->PushGlobalPosition(global_position);
+    hit->PushLocalPosition(local_position);
+    hit->PushMomentum(momentum);
+    hit->PushPolarization(polarization);
+    hits_collection_->insert(hit);
+  }
 
   return true;
 }

@@ -43,7 +43,7 @@
 class G4AttDef;
 class G4AttValue;
 
-using std::vector
+using std::vector;
 
 /// Drift chamber hit
 ///
@@ -61,10 +61,10 @@ class HodoscopeHit : public G4VHit
 
     const HodoscopeHit& operator=(const HodoscopeHit &right);
     G4bool operator==(const HodoscopeHit &right) const;
-    
+
     inline void *operator new(size_t);
     inline void operator delete(void *aHit);
-    
+
     virtual void Draw();
     virtual const std::map<G4String,G4AttDef>* GetAttDefs() const;
     virtual vector<G4AttValue>* CreateAttValues() const;
@@ -73,22 +73,22 @@ class HodoscopeHit : public G4VHit
     inline void SetSegmentID(const G4int id) { segment_id_ = id; }
     inline G4int GetSegmentID() const { return segment_id_; }
 
-    inline void SetLogicalVolume(const G4LogicalVolume* logical) { logical_ = logical; }
+    inline void SetLogicalVolume(G4LogicalVolume* logical) { logical_ = logical; }
     inline G4LogicalVolume* GetLogicalVolume() const { return logical_; }
 
     inline void SetPosition(const G4ThreeVector position) { position_ = position; }
     inline G4ThreeVector GetPosition() const { return position_; }
-    
+
     inline void SetRotation(const G4RotationMatrix rotation) { rotation_ = rotation; }
     inline G4RotationMatrix GetRotation() const { return rotation_; }
-    
-    inline void PushTotalHits(const G4int total_hits) { total_hits_++; }
+
+    inline void PushTotalHits() { total_hits_++; }
     inline void SetTotalHits(const G4int total_hits) { total_hits_ = total_hits; }
     inline G4int GetTotalHits() const { return total_hits_; }
 
     inline void PushTrackID(const G4int id) { track_id_.push_back(id); }
     inline void SetTrackID(const G4int i_hit, const G4int id);
-    inline vector<G4int> GetTrackID(const G4int i_hit) const { return track_id_; }
+    inline vector<G4int> GetTrackID() const { return track_id_; }
     inline G4int GetTrackID(const G4int i_hit) const;
 
     inline void PushParentID(const G4int id) { parent_id_.push_back(id); }
@@ -166,20 +166,20 @@ inline void HodoscopeHit::operator delete(void* aHit)
   HodoscopeHitAllocator->FreeSingle((HodoscopeHit*) aHit);
 }
 
-inline void SetTrackID(const G4int i_hit, const G4int id){
+inline void HodoscopeHit::SetTrackID(const G4int i_hit, const G4int id){
   if(i_hit<total_hits_){
     track_id_[i_hit] = id;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetTrackID()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetTrackID()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4int GetTrackID(const G4int i_hit) const{
+inline G4int HodoscopeHit::GetTrackID(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return track_id_[i_hits];
+    return track_id_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
@@ -190,20 +190,20 @@ inline G4int GetTrackID(const G4int i_hit) const{
   }
 }
 
-inline void SetParentID(const G4int i_hit, const G4int id){
+inline void HodoscopeHit::SetParentID(const G4int i_hit, const G4int id){
   if(i_hit<total_hits_){
     parent_id_[i_hit] = id;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetParentID()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetParentID()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4int GetParentID(const G4int i_hit) const{
+inline G4int HodoscopeHit::GetParentID(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return parent_id_[i_hits];
+    return parent_id_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
@@ -214,20 +214,20 @@ inline G4int GetParentID(const G4int i_hit) const{
   }
 }
 
-inline void SetParticleID(const G4int i_hit, const G4int id){
+inline void HodoscopeHit::SetParticleID(const G4int i_hit, const G4int id){
   if(i_hit<total_hits_){
     parent_id_[i_hit] = id;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetParticleID()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetParticleID()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4int GetParticleID(const G4int i_hit) const{
+inline G4int HodoscopeHit::GetParticleID(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return particle_id_[i_hits];
+    return particle_id_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
@@ -238,20 +238,20 @@ inline G4int GetParticleID(const G4int i_hit) const{
   }
 }
 
-inline void SetHitTime(const G4int i_hit, const G4double hit_time){
+inline void HodoscopeHit::SetHitTime(const G4int i_hit, const G4double hit_time){
   if(i_hit<total_hits_){
     hit_time_[i_hit] = hit_time;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetHitTime()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetHitTime()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4double GetHitTime(const G4int i_hit) const{
+inline G4double HodoscopeHit::GetHitTime(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return hit_time_[i_hits];
+    return hit_time_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
@@ -262,20 +262,20 @@ inline G4double GetHitTime(const G4int i_hit) const{
   }
 }
 
-inline void SetEnergyDeposit(const G4int i_hit, const G4double energy_deposit){
+inline void HodoscopeHit::SetEnergyDeposit(const G4int i_hit, const G4double energy_deposit){
   if(i_hit<total_hits_){
     energy_deposit_[i_hit] = energy_deposit;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetEnergyDeposit()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetEnergyDeposit()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4double GetEnergyDeposit(const G4int i_hit) const{
+inline G4double HodoscopeHit::GetEnergyDeposit(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return energy_deposit_[i_hits];
+    return energy_deposit_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
@@ -286,99 +286,99 @@ inline G4double GetEnergyDeposit(const G4int i_hit) const{
   }
 }
 
-inline void SetLocalPosition(const G4int i_hit, const G4ThreeVector local_position){
+inline void HodoscopeHit::SetLocalPosition(const G4int i_hit, const G4ThreeVector local_position){
   if(i_hit<total_hits_){
     local_position_[i_hit] = local_position;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetLocalPosition()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetLocalPosition()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4ThreeVector GetLocalPosition(const G4int i_hit) const{
+inline G4ThreeVector HodoscopeHit::GetLocalPosition(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return local_position_[i_hits];
+    return local_position_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
     G4Exception("HodoscopeHit::GetLocalPosition(G4int)",
         "Code002", JustWarning, msg);
-    return -1;
+    return G4ThreeVector(0);
   }
 }
 
-inline void SetGlobalPosition(const G4int i_hit, const G4ThreeVector global_position){
+inline void HodoscopeHit::SetGlobalPosition(const G4int i_hit, const G4ThreeVector global_position){
   if(i_hit<total_hits_){
     global_position_[i_hit] = global_position;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetGlobalPosition()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetGlobalPosition()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4ThreeVector GetGlobalPosition(const G4int i_hit) const{
+inline G4ThreeVector HodoscopeHit::GetGlobalPosition(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return global_position_[i_hits];
+    return global_position_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
     G4Exception("HodoscopeHit::GetGlobalPosition(G4int)",
         "Code002", JustWarning, msg);
-    return -1;
+    return G4ThreeVector(0);
   }
 }
 
-inline void SetMomentum(const G4int i_hit, const G4ThreeVector momentum){
+inline void HodoscopeHit::SetMomentum(const G4int i_hit, const G4ThreeVector momentum){
   if(i_hit<total_hits_){
     momentum_[i_hit] = momentum;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetMomentum()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetMomentum()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4ThreeVector GetMomentum(const G4int i_hit) const{
+inline G4ThreeVector HodoscopeHit::GetMomentum(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return momentum_[i_hits];
+    return momentum_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
     G4Exception("HodoscopeHit::GetMomentum(G4int)",
         "Code002", JustWarning, msg);
-    return -1;
+    return G4ThreeVector(0);
   }
 }
 
-inline void SetPolarization(const G4int i_hit, const G4ThreeVector polarization){
+inline void HodoscopeHit::SetPolarization(const G4int i_hit, const G4ThreeVector polarization){
   if(i_hit<total_hits_){
     polarization_[i_hit] = polarization;
   }
   else{
-      G4ExceptionDescription msg;
-      msg << "No hits found." << G4endl; 
-      G4Exception("HodoscopeHit::SetPolarization()",
-          "Code002", JustWarning, msg);
+    G4ExceptionDescription msg;
+    msg << "No hits found." << G4endl; 
+    G4Exception("HodoscopeHit::SetPolarization()",
+        "Code002", JustWarning, msg);
   }
 }
-inline G4ThreeVector GetPolarization(const G4int i_hit) const{
+inline G4ThreeVector HodoscopeHit::GetPolarization(const G4int i_hit) const{
   if(i_hit<total_hits_){
-    return polarization_[i_hits];
+    return polarization_[i_hit];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
     G4Exception("HodoscopeHit::GetPolarization(G4int)",
         "Code002", JustWarning, msg);
-    return -1;
+    return G4ThreeVector(0);
   }
 }
 
