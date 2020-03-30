@@ -93,10 +93,10 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 
 void PrimaryGeneratorAction::DefineCommands()
 {
-  // Define /proton_pol/generator command directory using generic messenger class
+  // Define /hodoscope/generator command directory using generic messenger class
   messenger_ 
     = new G4GenericMessenger(this, 
-        "/proton_pol/generator/", 
+        "/hodoscope/generator/", 
         "Primary generator control");
 
   // momentum command

@@ -39,12 +39,12 @@
 PhysicsListMessenger::PhysicsListMessenger(PhysicsList* pPhys)
 :G4UImessenger(), fPhysicsList(pPhys)
 {   
-  fPListCmd = new G4UIcmdWithAString("/proton_pol/Physics",this);
+  fPListCmd = new G4UIcmdWithAString("/hodoscope/Physics",this);
   fPListCmd->SetGuidance("Add modular physics list.");
   fPListCmd->SetParameterName("PList",false);
   fPListCmd->AvailableForStates(G4State_PreInit);
 
-  fListCmd = new G4UIcmdWithoutParameter("/proton_pol/ListPhysics",this);
+  fListCmd = new G4UIcmdWithoutParameter("/hodoscope/ListPhysics",this);
   fListCmd->SetGuidance("Available Physics Lists");
   fListCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 }
@@ -77,7 +77,7 @@ void PhysicsListMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
       fPhysicsList->AddPhysicsList(name);
     } else {
       G4cout << "### PhysicsListMessenger WARNING: "
-             << " /proton_pol/Physics UI command is not available "
+             << " /hodoscope/Physics UI command is not available "
              << "for reference Physics List" << G4endl;
     }
 
@@ -86,7 +86,7 @@ void PhysicsListMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
       fPhysicsList->List();
     } else { 
       G4cout << "### PhysicsListMessenger WARNING: "
-             << " /proton_pol/ListPhysics UI command is not available "
+             << " /hodoscope/ListPhysics UI command is not available "
              << "for reference Physics List" << G4endl;
     }
   }

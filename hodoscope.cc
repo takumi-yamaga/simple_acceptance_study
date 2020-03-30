@@ -24,8 +24,8 @@
 // ********************************************************************
 //
 //
-/// \file proton_pol.cc
-/// \brief Main program of proton_pol
+/// \file hodoscope.cc
+/// \brief Main program of hodoscope
 
 #include "DetectorConstruction.hh"
 #include "ActionInitialization.hh"
