@@ -24,42 +24,55 @@
 // ********************************************************************
 //
 //
-/// \copied from B5Constants.hh
-/// \brief Definition of constants.
+/// \file SolenoidMagneticField.cc
+/// \brief Implementation of the SolenoidMagneticField class
 
-#ifndef Constants_h
-#define Constants_h 1
+#include "SolenoidMagneticField.hh"
 
-#include <array>
+#include "G4GenericMessenger.hh"
+#include "G4SystemOfUnits.hh"
 #include "globals.hh"
-#include "G4Colour.hh"
 
-using std::array;
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-// hodoscopes
-namespace Hodoscope{
-  constexpr G4int kTotalNumber = 2;
-  const array<G4String, kTotalNumber> detector_name
-    = {{ "hodoscope1", "hodoscope2" }};
+SolenoidMagneticField::SolenoidMagneticField()
+: G4MagneticField(), 
+  messenger_(nullptr), magnetic_strength_z_(1.0*tesla)
+{
+  // define commands for this class
+  DefineCommands();
 }
 
-namespace MyColour{
-  // G4Colour(red, green, blue, alpha)
-  // alpha = 1. - transparency
-  
-  inline G4Colour Scintillator(){ return G4Colour(0.2,1.0,1.0,0.2); }
-  inline G4Colour ScintillatorHasHit(){ return G4Colour(1.0,0.0,0.0,0.2); }
-  inline G4Colour Reflector(){ return G4Colour(0.7882,0.7922,0.7922,0.1); }
-  inline G4Colour LightShield(){ return G4Colour(0.1,0.1,0.1,0.1); }
-  inline G4Colour LightGuide(){ return G4Colour(0.0,0.0,1.0,0.5); }
-  inline G4Colour Transparent(){ return G4Colour(0.0,0.0,0.0,0.0); }
-  inline G4Colour PMTWindow(){ return G4Colour(139./255.,69./255.,19./255.,0.8); }
-  inline G4Colour PMTInner(){ return G4Colour(0.05,0.05,0.9,0.1); }
-  inline G4Colour PMTOuter(){ return G4Colour(55./255.,55./255.,55./255.,1.0); }
-  inline G4Colour Magnetic(){ return G4Colour(0.3,0.3,0.3,0.2); }
-  inline G4Colour Target(){ return G4Colour(0.8,0.0,0.0,0.5); }
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  inline G4Colour Hit(){ return G4Colour(1.0,0.0,0.0,1.0); }
+SolenoidMagneticField::~SolenoidMagneticField()
+{ 
+  delete messenger_; 
 }
 
-#endif
+void SolenoidMagneticField::GetFieldValue(const G4double [4],double *field) const
+{
+  field[0] = 0.;
+  field[1] = 0.;
+  field[2] = magnetic_strength_z_;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void SolenoidMagneticField::DefineCommands()
+{
+  // Define /Solenoid/field command directory using generic messenger class
+  messenger_ = new G4GenericMessenger(this, 
+                                      "/Solenoid/field/", 
+                                      "Field control");
+
+  // fieldValue command 
+  auto& valueCmd
+    = messenger_->DeclareMethodWithUnit("value","tesla",
+                                &SolenoidMagneticField::SetField, 
+                                "Set field strength.");
+  valueCmd.SetParameterName("field", true);
+  valueCmd.SetDefaultValue("1.");
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

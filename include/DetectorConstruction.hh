@@ -38,6 +38,8 @@
 
 #include <vector>
 
+class SolenoidMagneticField;
+
 class G4VPhysicalVolume;
 class G4Material;
 class G4VSensitiveDetector;
@@ -64,11 +66,12 @@ class DetectorConstruction : public G4VUserDetectorConstruction
   private:
     G4GenericMessenger* fMessenger;
     
-    //static G4ThreadLocal MagneticField* fMagneticField;
-    //static G4ThreadLocal G4FieldManager* fFieldMgr;
+    static G4ThreadLocal SolenoidMagneticField* magnetic_field_;
+    static G4ThreadLocal G4FieldManager* field_manager_;
     
-    G4LogicalVolume* hodoscope1_logical_;
-    G4LogicalVolume* hodoscope2_logical_;
+    G4LogicalVolume* magnetic_logical_;
+    G4LogicalVolume* cdh_logical_;
+    G4LogicalVolume* disc_logical_;
 
     std::vector<G4VisAttributes*> fVisAttributes;
     

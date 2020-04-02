@@ -24,8 +24,8 @@
 // ********************************************************************
 //
 //
-/// \file hodoscope.cc
-/// \brief Main program of hodoscope
+/// \file simple_acceptance_study.cc
+/// \brief Main program of simple_acceptance_study
 
 #include "DetectorConstruction.hh"
 #include "ActionInitialization.hh"

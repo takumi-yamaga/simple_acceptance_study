@@ -28,6 +28,7 @@
 /// \brief Implementation of the DetectorConstruction class
 
 #include "DetectorConstruction.hh"
+#include "SolenoidMagneticField.hh"
 #include "HodoscopeSD.hh"
 #include "Constants.hh"
 
@@ -63,11 +64,14 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+G4ThreadLocal SolenoidMagneticField* DetectorConstruction::magnetic_field_ = 0;
+G4ThreadLocal G4FieldManager* DetectorConstruction::field_manager_ = 0;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorConstruction::DetectorConstruction()
   : G4VUserDetectorConstruction(), 
-  hodoscope1_logical_(nullptr), hodoscope2_logical_(nullptr)
+  magnetic_logical_(nullptr), cdh_logical_(nullptr)
 {
 }
 
@@ -89,6 +93,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   ConstructMaterials();
   auto air = G4Material::GetMaterial("G4_AIR");
   auto scintillator = G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+  auto liquid_He3 = G4Material::GetMaterial("liquid_He3");
   //auto vacuum = G4Material::GetMaterial("G4_Galactic");
   //auto argonGas = G4Material::GetMaterial("G4_Ar");
   //auto csI = G4Material::GetMaterial("G4_CESIUM_IODIDE");
@@ -111,42 +116,72 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     = new G4PVPlacement(0,G4ThreeVector(),world_logical,"world_physical",0,
         false,0,kCheckOverlaps);
 
-  // hodoscope1
-  auto hodoscope1_size_x = 100.*mm;
-  auto hodoscope1_size_y = 100.*mm;
-  auto hodoscope1_thickness = 50.*mm;
-
-  auto hodoscope1_position = G4ThreeVector(0.*mm,0.*mm,-100.*mm);
-  auto hodoscope1_solid 
-    = new G4Box("hodoscope1_solid",hodoscope1_size_x/2.,hodoscope1_size_y/2.,hodoscope1_thickness/2.);
-  hodoscope1_logical_
-    = new G4LogicalVolume(hodoscope1_solid,scintillator,"hodoscope1_logical");
-  new G4PVPlacement(0,hodoscope1_position,hodoscope1_logical_,"hodoscope1_physical",
+  // magnetic field
+  auto magnetic_radius = 1822.*mm/2.;
+  auto magnetic_length = 3320.*mm;
+  auto magnetic_solid
+      = new G4Tubs("magnetic_solid",0.*mm,magnetic_radius,magnetic_length/2.,0.*deg,360.*deg);
+  magnetic_logical_ = new G4LogicalVolume(magnetic_solid,air,"magnetic_logical");
+  new G4PVPlacement(0,G4ThreeVector(),magnetic_logical_,"magnetic_physical",
       world_logical,false,0,kCheckOverlaps);
+  // set step limit in magnetic field  
+  G4UserLimits* magnetic_userlimits = new G4UserLimits(magnetic_radius);
+  magnetic_logical_->SetUserLimits(magnetic_userlimits);
 
-  // hodoscope2
-  auto hodoscope2_size_x = 100.*mm;
-  auto hodoscope2_size_y = 100.*mm;
-  auto hodoscope2_thickness = 50.*mm;
+  // target
+  auto target_radius = 30.*mm;
+  auto target_length = 150.*mm;
+  auto target_solid 
+    = new G4Tubs("target_solid",0.*mm,target_radius,target_length/2.,0.*deg,360.*deg);
+  auto target_logical = new G4LogicalVolume(target_solid,liquid_He3,"target_logical");
+  new G4PVPlacement(0,G4ThreeVector(),target_logical,"target_physical",
+      magnetic_logical_,false,0,kCheckOverlaps);
 
-  auto hodoscope2_position = G4ThreeVector(0.*mm,0.*mm,100.*mm);
-  auto hodoscope2_solid 
-    = new G4Box("hodoscope2_solid",hodoscope2_size_x/2.,hodoscope2_size_y/2.,hodoscope2_thickness/2.);
-  hodoscope2_logical_
-    = new G4LogicalVolume(hodoscope2_solid,scintillator,"hodoscope2_logical");
-  new G4PVPlacement(0,hodoscope2_position,hodoscope2_logical_,"hodoscope2_physical",
-      world_logical,false,0,kCheckOverlaps);
+  // cdh
+  auto cdh_radius = 40.*cm;
+  auto cdh_length = 100.*cm;
+  auto cdh_thickness = 30.*mm;
+  auto cdh_solid 
+    = new G4Tubs("cdh_solid",cdh_radius-cdh_thickness/2.,cdh_radius+cdh_thickness/2.,cdh_length/2.,0.*deg,360.*deg);
+  cdh_logical_ = new G4LogicalVolume(cdh_solid,scintillator,"cdh_logical");
+  new G4PVPlacement(0,G4ThreeVector(),cdh_logical_,"cdh_physical",
+      magnetic_logical_,false,0,kCheckOverlaps);
+
+  // disc
+  auto disc_inner_radius = 15.*cm;
+  auto disc_outer_radius = cdh_radius-cdh_thickness/2.;
+  auto disc_thickness = 30.*mm;
+  auto disc_solid 
+    = new G4Tubs("disc_solid",disc_inner_radius,disc_outer_radius,disc_thickness/2.,0.*deg,360.*deg);
+  disc_logical_ = new G4LogicalVolume(disc_solid,scintillator,"disc_logical");
+  auto disc_segment1_transform = G4ThreeVector(0.*mm,0.*mm,-cdh_length/2.-disc_thickness/2.-kSpace);
+  new G4PVPlacement(0,disc_segment1_transform,disc_logical_,"disc_segment1_physical",
+      magnetic_logical_,false,0,kCheckOverlaps);
+  auto disc_segment2_transform = G4ThreeVector(0.*mm,0.*mm,+cdh_length/2.+disc_thickness/2.-kSpace);
+  new G4PVPlacement(0,disc_segment2_transform,disc_logical_,"disc_segment2_physical",
+      magnetic_logical_,false,1,kCheckOverlaps);
 
   // visualization attributes ------------------------------------------------
 
-  auto visAttributes = new G4VisAttributes(G4Colour::White());
+  auto visAttributes = new G4VisAttributes(MyColour::Transparent());
   visAttributes->SetVisibility(false);
   world_logical->SetVisAttributes(visAttributes);
   fVisAttributes.push_back(visAttributes);
-
+  // magnetic
+  visAttributes = new G4VisAttributes(MyColour::Magnetic());
+  magnetic_logical_->SetVisAttributes(visAttributes);
+  fVisAttributes.push_back(visAttributes);
+  // target
+  visAttributes = new G4VisAttributes(MyColour::Target());
+  target_logical->SetVisAttributes(visAttributes);
+  fVisAttributes.push_back(visAttributes);
+  // cdh
   visAttributes = new G4VisAttributes(MyColour::Scintillator());
-  hodoscope1_logical_->SetVisAttributes(visAttributes);
-  hodoscope2_logical_->SetVisAttributes(visAttributes);
+  cdh_logical_->SetVisAttributes(visAttributes);
+  fVisAttributes.push_back(visAttributes);
+  // disc
+  visAttributes = new G4VisAttributes(MyColour::Scintillator());
+  disc_logical_->SetVisAttributes(visAttributes);
   fVisAttributes.push_back(visAttributes);
 
   // return the world physical volume ----------------------------------------
@@ -158,18 +193,26 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
 void DetectorConstruction::ConstructSDandField()
 {
-  auto sdManager = G4SDManager::GetSDMpointer();
-  G4String sensitive_detector_name;
 
   // sensitive detectors -----------------------------------------------------
-  auto hodoscope1 = new HodoscopeSD(sensitive_detector_name="/hodoscope1");
-  sdManager->AddNewDetector(hodoscope1);
-  hodoscope1_logical_->SetSensitiveDetector(hodoscope1);
+  auto sdManager = G4SDManager::GetSDMpointer();
+  G4String sensitive_detector_name;
+  auto cdh = new HodoscopeSD(sensitive_detector_name="/cdh");
+  sdManager->AddNewDetector(cdh);
+  cdh_logical_->SetSensitiveDetector(cdh);
+  auto disc = new HodoscopeSD(sensitive_detector_name="/disc");
+  sdManager->AddNewDetector(disc);
+  disc_logical_->SetSensitiveDetector(disc);
+  // -------------------------------------------------------------------------
 
-  auto hodoscope2 = new HodoscopeSD(sensitive_detector_name="/hodoscope2");
-  sdManager->AddNewDetector(hodoscope2);
-  hodoscope2_logical_->SetSensitiveDetector(hodoscope2);
-
+  // magnetic field ----------------------------------------------------------
+  magnetic_field_ = new SolenoidMagneticField();
+  field_manager_ = new G4FieldManager();
+  field_manager_->SetDetectorField(magnetic_field_);
+  field_manager_->CreateChordFinder(magnetic_field_);
+  G4bool force_to_all_daughters = true; // if true, all daughters have the same field
+  magnetic_logical_->SetFieldManager(field_manager_, force_to_all_daughters);
+  // -------------------------------------------------------------------------
 }    
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -200,6 +243,8 @@ void DetectorConstruction::ConstructMaterials()
   // Vacuum "Galactic"
   nistManager->FindOrBuildMaterial("G4_Galactic");
 
+  // liquid-He3
+  new G4Material("liquid He3",2.,3.016029*g/mole,81.2*mg/cm3,kStateLiquid);
 
   G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;

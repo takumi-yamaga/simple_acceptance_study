@@ -24,42 +24,37 @@
 // ********************************************************************
 //
 //
-/// \copied from B5Constants.hh
-/// \brief Definition of constants.
+/// \file B5MagneticField.hh
+/// \brief Definition of the B5MagneticField class
 
-#ifndef Constants_h
-#define Constants_h 1
+#ifndef B5MagneticField_H
+#define B5MagneticField_H 1
 
-#include <array>
 #include "globals.hh"
-#include "G4Colour.hh"
+#include "G4MagneticField.hh"
 
-using std::array;
+class G4GenericMessenger;
 
-// hodoscopes
-namespace Hodoscope{
-  constexpr G4int kTotalNumber = 2;
-  const array<G4String, kTotalNumber> detector_name
-    = {{ "hodoscope1", "hodoscope2" }};
-}
+/// Magnetic field
 
-namespace MyColour{
-  // G4Colour(red, green, blue, alpha)
-  // alpha = 1. - transparency
-  
-  inline G4Colour Scintillator(){ return G4Colour(0.2,1.0,1.0,0.2); }
-  inline G4Colour ScintillatorHasHit(){ return G4Colour(1.0,0.0,0.0,0.2); }
-  inline G4Colour Reflector(){ return G4Colour(0.7882,0.7922,0.7922,0.1); }
-  inline G4Colour LightShield(){ return G4Colour(0.1,0.1,0.1,0.1); }
-  inline G4Colour LightGuide(){ return G4Colour(0.0,0.0,1.0,0.5); }
-  inline G4Colour Transparent(){ return G4Colour(0.0,0.0,0.0,0.0); }
-  inline G4Colour PMTWindow(){ return G4Colour(139./255.,69./255.,19./255.,0.8); }
-  inline G4Colour PMTInner(){ return G4Colour(0.05,0.05,0.9,0.1); }
-  inline G4Colour PMTOuter(){ return G4Colour(55./255.,55./255.,55./255.,1.0); }
-  inline G4Colour Magnetic(){ return G4Colour(0.3,0.3,0.3,0.2); }
-  inline G4Colour Target(){ return G4Colour(0.8,0.0,0.0,0.5); }
+class B5MagneticField : public G4MagneticField
+{
+  public:
+    B5MagneticField();
+    virtual ~B5MagneticField();
+    
+    virtual void GetFieldValue(const G4double point[4],double* bField ) const;
+    
+    void SetField(G4double val) { fBy = val; }
+    G4double GetField() const { return fBy; }
+    
+  private:
+    void DefineCommands();
 
-  inline G4Colour Hit(){ return G4Colour(1.0,0.0,0.0,1.0); }
-}
+    G4GenericMessenger* fMessenger;
+    G4double fBy;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif

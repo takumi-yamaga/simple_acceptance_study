@@ -24,42 +24,66 @@
 // ********************************************************************
 //
 //
-/// \copied from B5Constants.hh
-/// \brief Definition of constants.
+/// \file B5DetectorConstruction.hh
+/// \brief Definition of the B5DetectorConstruction class
 
-#ifndef Constants_h
-#define Constants_h 1
+#ifndef B5DetectorConstruction_h
+#define B5DetectorConstruction_h 1
 
-#include <array>
 #include "globals.hh"
-#include "G4Colour.hh"
+#include "G4VUserDetectorConstruction.hh"
+#include "G4RotationMatrix.hh"
+#include "G4FieldManager.hh"
 
-using std::array;
+#include <vector>
 
-// hodoscopes
-namespace Hodoscope{
-  constexpr G4int kTotalNumber = 2;
-  const array<G4String, kTotalNumber> detector_name
-    = {{ "hodoscope1", "hodoscope2" }};
-}
+class B5MagneticField;
 
-namespace MyColour{
-  // G4Colour(red, green, blue, alpha)
-  // alpha = 1. - transparency
-  
-  inline G4Colour Scintillator(){ return G4Colour(0.2,1.0,1.0,0.2); }
-  inline G4Colour ScintillatorHasHit(){ return G4Colour(1.0,0.0,0.0,0.2); }
-  inline G4Colour Reflector(){ return G4Colour(0.7882,0.7922,0.7922,0.1); }
-  inline G4Colour LightShield(){ return G4Colour(0.1,0.1,0.1,0.1); }
-  inline G4Colour LightGuide(){ return G4Colour(0.0,0.0,1.0,0.5); }
-  inline G4Colour Transparent(){ return G4Colour(0.0,0.0,0.0,0.0); }
-  inline G4Colour PMTWindow(){ return G4Colour(139./255.,69./255.,19./255.,0.8); }
-  inline G4Colour PMTInner(){ return G4Colour(0.05,0.05,0.9,0.1); }
-  inline G4Colour PMTOuter(){ return G4Colour(55./255.,55./255.,55./255.,1.0); }
-  inline G4Colour Magnetic(){ return G4Colour(0.3,0.3,0.3,0.2); }
-  inline G4Colour Target(){ return G4Colour(0.8,0.0,0.0,0.5); }
+class G4VPhysicalVolume;
+class G4Material;
+class G4VSensitiveDetector;
+class G4VisAttributes;
+class G4GenericMessenger;
 
-  inline G4Colour Hit(){ return G4Colour(1.0,0.0,0.0,1.0); }
-}
+/// Detector construction
+
+class B5DetectorConstruction : public G4VUserDetectorConstruction
+{
+  public:
+    B5DetectorConstruction();
+    virtual ~B5DetectorConstruction();
+    
+    virtual G4VPhysicalVolume* Construct();
+    virtual void ConstructSDandField();
+
+    void SetArmAngle(G4double val);
+    G4double GetArmAngle() { return fArmAngle; }
+    
+    void ConstructMaterials();
+    
+  private:
+    void DefineCommands();
+
+    G4GenericMessenger* fMessenger;
+    
+    static G4ThreadLocal B5MagneticField* fMagneticField;
+    static G4ThreadLocal G4FieldManager* fFieldMgr;
+    
+    G4LogicalVolume* fHodoscope1Logical;
+    G4LogicalVolume* fHodoscope2Logical;
+    G4LogicalVolume* fWirePlane1Logical;
+    G4LogicalVolume* fWirePlane2Logical;
+    G4LogicalVolume* fCellLogical;
+    G4LogicalVolume* fHadCalScintiLogical;
+    G4LogicalVolume* fMagneticLogical;
+    
+    std::vector<G4VisAttributes*> fVisAttributes;
+    
+    G4double fArmAngle;
+    G4RotationMatrix* fArmRotation;
+    G4VPhysicalVolume* fSecondArmPhys;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
