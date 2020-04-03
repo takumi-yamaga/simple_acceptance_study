@@ -24,52 +24,49 @@
 // ********************************************************************
 //
 //
-/// \copied from B5Constants.hh
-/// \brief Definition of constants.
+/// \copied from B5PrimaryGeneratorAction.hh
+/// \brief Definition of the PrimaryGeneratorAction class
 
-#ifndef Constants_h
-#define Constants_h 1
+#ifndef PrimaryGeneratorAction_h
+#define PrimaryGeneratorAction_h 1
 
-#include <array>
+#include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
-#include "TVector3.h"
-#include "G4Colour.hh"
-#include "G4ThreeVector.hh"
 
-using std::array;
+class G4ParticleGun;
+class G4GenericMessenger;
+class G4Event;
+class G4ParticleDefinition;
 
-// hodoscopes
-namespace Hodoscope{
-  constexpr G4int kTotalNumber = 2;
-  const array<G4String, kTotalNumber> detector_name
-    = {{ "hodoscope1", "hodoscope2" }};
-}
+/// Primary generator
+///
+/// A single particle is generated.
+/// User can select 
+/// - the initial momentum and angle
+/// - the momentum and angle spreads
+/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+ 
 
-namespace MyColour{
-  // G4Colour(red, green, blue, alpha)
-  // alpha = 1. - transparency
-  
-  inline G4Colour Scintillator(){ return G4Colour(0.2,1.0,1.0,0.2); }
-  inline G4Colour ScintillatorHasHit(){ return G4Colour(1.0,0.0,0.0,0.2); }
-  inline G4Colour Reflector(){ return G4Colour(0.7882,0.7922,0.7922,0.1); }
-  inline G4Colour LightShield(){ return G4Colour(0.1,0.1,0.1,0.1); }
-  inline G4Colour LightGuide(){ return G4Colour(0.0,0.0,1.0,0.5); }
-  inline G4Colour Transparent(){ return G4Colour(0.0,0.0,0.0,0.0); }
-  inline G4Colour PMTWindow(){ return G4Colour(139./255.,69./255.,19./255.,0.8); }
-  inline G4Colour PMTInner(){ return G4Colour(0.05,0.05,0.9,0.1); }
-  inline G4Colour PMTOuter(){ return G4Colour(55./255.,55./255.,55./255.,1.0); }
-  inline G4Colour Magnetic(){ return G4Colour(0.3,0.3,0.3,0.2); }
-  inline G4Colour Target(){ return G4Colour(0.8,0.0,0.0,1.0); }
 
-  inline G4Colour Hit(){ return G4Colour(1.0,0.0,0.0,1.0); }
-}
+class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
+{
+  public:
+    PrimaryGeneratorAction();
+    virtual ~PrimaryGeneratorAction();
+    
+    virtual void GeneratePrimaries(G4Event*);
+    
+    //inline void SetMomentum(G4double momentum) { momentum_ = momentum; }
+    //inline G4double GetMomentum() const { return momentum_; }
 
-// utility functions
+  private:
+    void DefineCommands();
 
-inline G4ThreeVector ConvertVector(TVector3 vector){
-  return G4ThreeVector(vector.x(),vector.y(),vector.z());
-}
-inline TVector3 ConvertVector(G4ThreeVector vector){
-  return TVector3(vector.x(),vector.y(),vector.z());
-}
+    std::vector <G4ParticleDefinition*> particle_defenitions;
+
+    G4ParticleGun* particlegun_;
+    G4GenericMessenger* messenger_;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 #endif

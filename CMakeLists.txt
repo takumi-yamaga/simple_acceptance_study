@@ -28,6 +28,13 @@ endif()
 include(${Geant4_USE_FILE})
 
 #----------------------------------------------------------------------------
+# Setup ROOT
+list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+find_package(ROOT)
+include_directories(${ROOT_INCLUDE_DIR})
+include(${ROOT_USE_FILE})
+
+#----------------------------------------------------------------------------
 # Locate sources and headers for this project
 # NB: headers are included so they will show up in IDEs
 #
@@ -41,6 +48,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #
 add_executable(execute-simple_acceptance_study simple_acceptance_study.cc ${sources} ${headers})
 target_link_libraries(execute-simple_acceptance_study ${Geant4_LIBRARIES})
+target_link_libraries(execute-simple_acceptance_study ${ROOT_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory.
