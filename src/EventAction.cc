@@ -111,6 +111,10 @@ void EventAction::EndOfEventAction(const G4Event* event)
   // Get analysis manager
   auto analysisManager = G4AnalysisManager::Instance();
 
+  // Check primary vertex
+  auto total_primaries = event->GetNumberOfPrimaryVertex();
+  G4cout << "total_primaries : " << total_primaries << G4endl;
+
   // ======================================================
   // DCIN =================================================
   // ======================================================

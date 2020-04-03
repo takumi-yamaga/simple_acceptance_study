@@ -126,58 +126,6 @@ void HodoscopeHit::Draw()
     circle.SetVisAttributes(attributes);
     vis_manager->Draw(circle);
   }
-
-  // hit segment
-  auto logical_attributes = logical_->GetVisAttributes();
-  if (logical_attributes){
-    attributes = *logical_attributes;
-    attributes.SetColour(MyColour::ScintillatorHasHit());
-    attributes.SetForceSolid(true); // drawing solid shape
-    G4Transform3D transform(rotation_.inverse(),-position_);
-    vis_manager->Draw(*logical_,attributes,transform);
-  }
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-const std::map<G4String,G4AttDef>* HodoscopeHit::GetAttDefs() const
-{
-  G4bool is_new;
-  auto store = G4AttDefStore::GetInstance("HodoscopeHit",is_new);
-
-  //if (is_new) {
-  //  (*store)["HitType"] 
-  //    = G4AttDef("HitType","Hit Type","Physics","","G4String");
-
-  //  (*store)["ID"] 
-  //    = G4AttDef("ID","ID","Physics","","G4int");
-
-  //  (*store)["Time"] 
-  //    = G4AttDef("Time","Time","Physics","G4BestUnit","G4double");
-
-  //  (*store)["Pos"] 
-  //    = G4AttDef("Pos", "Position", "Physics","G4BestUnit","G4ThreeVector");
-  //}
-
-  return store;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-std::vector<G4AttValue>* HodoscopeHit::CreateAttValues() const
-{
-  auto values = new std::vector<G4AttValue>;
-
-  //values
-  //  ->push_back(G4AttValue("HitType","HodoscopeHit",""));
-  //values
-  //  ->push_back(G4AttValue("ID",G4UIcommand::ConvertToString(segment_id_),""));
-  //values
-  //  ->push_back(G4AttValue("Time",G4BestUnit(hit_time_,"Time"),""));
-  //values
-  //  ->push_back(G4AttValue("Position",G4BestUnit(global_position_,"Length"),""));
-
-  return values;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
