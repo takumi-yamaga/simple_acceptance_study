@@ -24,127 +24,92 @@
 // ********************************************************************
 //
 //
-/// \copied from B5HodoscopeHit.cc
-/// \brief Implementation of the HodoscopeHit class
+/// \file of SegmentHit.cc
+/// \brief Implementation of the SegmentHit class
 
-#include "HodoscopeHit.hh"
+#include "SegmentHit.hh"
 #include "Constants.hh"
 
 #include "G4VVisManager.hh"
 #include "G4VisAttributes.hh"
-#include "G4Circle.hh"
 #include "G4Colour.hh"
-#include "G4AttDefStore.hh"
-#include "G4AttDef.hh"
-#include "G4AttValue.hh"
-#include "G4UIcommand.hh"
-#include "G4UnitsTable.hh"
-#include "G4SystemOfUnits.hh"
 #include "G4ios.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
+G4ThreadLocal G4Allocator<SegmentHit>* SegmentHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit()
+SegmentHit::SegmentHit()
 : G4VHit(), 
-  segment_id_(-1), logical_(nullptr), position_(0), total_hits_(0)
+  segment_id_(-1), logical_(nullptr), position_(0)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::~HodoscopeHit()
+SegmentHit::~SegmentHit()
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit(const HodoscopeHit &right)
+SegmentHit::SegmentHit(const SegmentHit &right)
   : G4VHit(),
   // hit segment
   segment_id_(right.segment_id_),
   segment_logical_(right.segment_logical_),
   segment_position_(right.segment_position_),
   segment_rotation_(right.segment_rotation_),
-  // hit particle
-  track_id_(right.track_id_),
-  particle_name_(right.particle_name_),
-  momentum_(right.momentum_),
-  initial_momentum_(right.initial_momentum_),
-  hit_time_(right.hit_time_),
-  energy_deposit_(right.energy_deposit_),
-  global_position_(right.global_position_),
-  // parent particle
-  parent_id_(right.parent_id_),
-  parent_name_(right.parent_name_),
-  parent_initial_momentum_(right.parent_initial_momentum_),
-  // daughter particle
-  daughter_ids_(right.daughter_ids_),
-  daughter_names_(right.daughter_names_),
-  daughter_momenta_(right.daughter_momenta_),
-  daughter_initial_momenta_(right.daughter_initial_momenta_),
-  daughter_hit_times_(right.daughter_hit_times_),
-  daughter_energy_deposits_(right.daughter_energy_deposits_),
-  daughter_global_positions_(right.daughter_global_positions_),
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-const HodoscopeHit& HodoscopeHit::operator=(const HodoscopeHit &right)
+const SegmentHit& SegmentHit::operator=(const SegmentHit &right)
 {
   segment_id_ = right.segment_id_;
   logical_ = right.logical_;
   position_ = right.position_;
   rotation_ = right.rotation_;
-  total_hits_ = right.total_hits_;
-
-  track_id_ = right.track_id_;
-  parent_id_ = right.parent_id_;
-  particle_id_ = right.particle_id_;
-  hit_time_ = right.hit_time_;
-  energy_deposit_ = right.energy_deposit_;
-  local_position_ = right.local_position_;
-  global_position_ = right.global_position_;
-  momentum_ = right.momentum_;
-  polarization_ = right.polarization_;
 
   return *this;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4bool HodoscopeHit::operator==(const HodoscopeHit &/*right*/) const
+G4bool SegmentHit::operator==(const SegmentHit &/*right*/) const
 {
   return false;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Draw()
+void SegmentHit::Draw()
 {
   auto vis_manager = G4VVisManager::GetConcreteInstance();
   if (! vis_manager) return;
   G4VisAttributes attributes;
 
-  // hit point
-  for(auto hit_position: global_position_){
-    G4Circle circle(hit_position);
-    circle.SetScreenSize(10);
-    circle.SetFillStyle(G4Circle::filled);
-    attributes.SetColour(MyColour::Hit());
-    circle.SetVisAttributes(attributes);
-    vis_manager->Draw(circle);
+  // hit segment
+  auto logical_attributes = logical_->GetVisAttributes();
+  if (logical_attributes){
+    attributes = *logical_attributes;
+    attributes.SetColour(MyColour::ScintillatorHasHit());
+    attributes.SetForceSolid(true); // drawing solid shape
+    G4Transform3D transform(rotation_.inverse(),position_);
+    vis_manager->Draw(*logical_,attributes,transform);
   }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Print()
+void SegmentHit::Print()
 {
   G4cout << "-------------------------------------" << G4endl;
+  G4cout << "SegmentHit --------------------------" << G4endl;
   G4cout << " segment    : " << segment_id_ << G4endl;
-  G4cout << " total hits : " << total_hits_ << G4endl;
+  G4cout << " position-x : " << position_ .x()<< G4endl;
+  G4cout << " position-y : " << position_ .y()<< G4endl;
+  G4cout << " position-z : " << position_ .z()<< G4endl;
   G4cout << "-------------------------------------" << G4endl;
 }
 

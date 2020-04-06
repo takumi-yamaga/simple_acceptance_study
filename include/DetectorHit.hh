@@ -24,43 +24,37 @@
 // ********************************************************************
 //
 //
-/// \copied from B5HodoscopeHit.hh
-/// \brief Definition of the HodoscopeHit class
+/// \file of DetectorHit.hh
+/// \brief Definition of the DetectorHit class
 
-#ifndef HodoscopeHit_h
-#define HodoscopeHit_h 1
+#ifndef DetectorHit_h
+#define DetectorHit_h 1
 
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
-#include "G4LogicalVolume.hh"
-#include "G4Transform3D.hh"
-#include "G4RotationMatrix.hh"
 
 #include <vector>
+#include <map>
 
-class G4AttDef;
-class G4AttValue;
+class SegmentHit;
+class ParticleHit;
 
-using std::vector;
+struct pos_and_de{
+  G4ThreeVector pos;
+  G4double de;
+}
 
-/// Drift chamber hit
-///
-/// It records:
-/// - the layer ID
-/// - the particle time
-/// - the particle local and global positions
-
-class HodoscopeHit : public G4VHit
+class DetectorHit : public G4VHit
 {
   public:
-    HodoscopeHit();
-    HodoscopeHit(const HodoscopeHit &right);
-    virtual ~HodoscopeHit();
+    DetectorHit();
+    DetectorHit(const DetectorHit &right);
+    virtual ~DetectorHit();
 
-    const HodoscopeHit& operator=(const HodoscopeHit &right);
-    G4bool operator==(const HodoscopeHit &right) const;
+    const DetectorHit& operator=(const DetectorHit &right);
+    G4bool operator==(const DetectorHit &right) const;
 
     inline void *operator new(size_t);
     inline void operator delete(void *aHit);
@@ -69,122 +63,45 @@ class HodoscopeHit : public G4VHit
     virtual void Print();
 
     // segment informations ---------------------------------------------------
-    // segment_id -------------------------------------------------------------
-    inline void SetSegmentID(const G4int input) { segment_id_ = input; }
-    inline G4int GetSegmentID() const { return segment_id_; }
-    // segment_logical --------------------------------------------------------
-    inline void SetLogicalVolume(G4LogicalVolume* input) { segment_logical_ = input; }
-    inline G4LogicalVolume* GetLogicalVolume() const { return segment_logical_; }
-    // segment_position -------------------------------------------------------
-    inline void SetPosition(const G4ThreeVector input) { segment_position_ = input; }
-    inline G4ThreeVector GetPosition() const { return segment_position_; }
-    // segment_rotation -------------------------------------------------------
-    inline void SetRotation(const G4RotationMatrix input) { segment_rotation_ = input; }
-    inline G4RotationMatrix GetRotation() const { return segment_rotation_; }
-    // ------------------------------------------------------------------------
-
-    // hit particle informations ----------------------------------------------
-    // track_id ---------------------------------------------------------------
-    inline void SetTrackID(const G4int input) { track_id_ = input; }
-    inline G4int GetTrackID() const { return track_id_; }
-    // particle_name ----------------------------------------------------------
-    inline void SetParticleName(const G4String input) { particle_name_ = input; }
-    inline G4String GetParticleName() const { return particle_name_; }
-    // momentum ---------------------------------------------------------------
-    inline void SetMomentum(const G4ThreeVector input) { momentum_ = input; }
-    inline G4ThreeVector GetMomentum() const { return momentum_; }
-    // initial_momentum -------------------------------------------------------
-    inline void SetInitialMomentumg(const G4ThreeVector input) { initial_momentum_ = input; }
-    inline G4ThreeVector GetInitialMomentumg() const { return initial_momentum_; }
-    // hit_time ---------------------------------------------------------------
-    inline void SetHitTime(const G4double input) { hit_time_ = input; }
-    inline G4double GetHitTime() const { return hit_time_; }
-    // energy_deposit ---------------------------------------------------------
-    inline void SetEnergyDeposit(const G4double input) { energy_deposit_ = input; }
-    inline void AddEnergyDeposit(const G4double input) { energy_deposit_ += input; }
-    inline G4double GetEnergyDeposit() const { return energy_deposit_; }
-    // global_position --------------------------------------------------------
-    inline void SetGlobalPosition(const G4ThreeVector input) { global_position_ = input; }
-    inline G4ThreeVector GetGlobalPosition() const { return global_position_; }
-    // ------------------------------------------------------------------------
-    
-    // parent particle informations -------------------------------------------
-    // parent_id --------------------------------------------------------------
-    inline void SetParentID(const G4int input) { parent_id_ = input; }
-    inline G4int GetParentID() const { return parent_id_; }
-    // parent_name ------------------------------------------------------------
-    inline void SetParentName(const G4String input) { parent_name_ = input; }
-    inline G4String GetParentName() const { return parent_name_; }
-    // parent_initial_momentum ------------------------------------------------
-    inline void SetParentInitial(const G4ThreeVector input) { parent_initial_momentum_ = input; }
-    inline G4ThreeVector GetParentInitial() const { return parent_initial_momentum_; }
-    // ------------------------------------------------------------------------
-
-    // daughter particles infromations ----------------------------------------
-    // daughter_id ------------------------------------------------------------
-    inline void PushDaughterID(const G4int input) { daughter_ids_.push_back(input); }
-    inline std::vector <G4int> GetDaughterIDs() const { return daughter_ids_; }
-    inline G4int SetDaughterID(const G4int i, const G4int input) const;
-    inline G4int GetDaughterID(const G4int i=0) const;
-    // daughter_name ----------------------------------------------------------
-    inline void PushDaughterName(const G4String input) { daughter_names_.push_back(input); }
-    inline std::vector <G4String> GetDaughterNames() const { return daughter_names_; }
-    inline G4int SetDaughterName(const G4int i, const G4String input) const;
-    inline G4String GetDaughterName(const G4int i=0) const;
-    // daughter_momentum ------------------------------------------------------
-    inline void PushDaughterMomentum(const G4double input) { daughter_momenta_.push_back(input); }
-    inline std::vector <G4double> GetDaughterMomenta() const { return daughter_momenta_; }
-    inline G4int SetDaughterMomentum(const G4int i, const G4double input) const;
-    inline G4int GetDaughterMomentum(const G4int i=0) const;
-    // daughter_initial_momentum ----------------------------------------------
-    inline void PushDaughterInitialMomentum(const G4double input) { daughter_initial_momenta_.push_back(input); }
-    inline std::vector <G4double> GetDaughterInitialMomenta() const { return daughter_initial_momenta_; }
-    inline G4int SetDaughterInitialMomentum(const G4int i, const G4double input) const;
-    inline G4int GetDaughterInitialMomentum(const G4int i=0) const;
-    // daughter_hit_time ------------------------------------------------------
-    inline void PushDaughterHitTime(const G4double input) { daughter_hit_times_.push_back(input); }
-    inline std::vector <G4double> GetDaughterHitTimes() const { return daughter_hit_times_; }
-    inline G4int SetDaughterHitTime(const G4int i, const G4double input) const;
-    inline G4int GetDaughterHitTime(const G4int i=0) const;
-    // daughter_energy_deposit ------------------------------------------------
-    inline void PushDaughterEnergyDeposit(const G4double input) { daughter_energy_deposits_.push_back(input); }
-    inline std::vector <G4double> GetDaughterEnergyDeposits() const { return daughter_energy_deposits_; }
-    inline G4int SetDaughterEnergyDeposit(const G4int i, const G4double input) const;
-    inline G4int AddDaughterEnergyDeposit(const G4int i, const G4double input) const;
-    inline G4int GetDaughterEnergyDeposit(const G4int i=0) const;
-    // daughter_global_position -----------------------------------------------
-    inline void PushDaughterGlobalPosition(const G4ThreeVector input) { daughter_global_positions_.push_back(input); }
-    inline std::vector <G4ThreeVector> GetDaughterGlobalPositions() const { return daughter_global_positions_; }
-    inline G4int SetDaughterGlobalPosition(const G4int i, const G4ThreeVector input) const;
-    inline G4int GetDaughterGlobalPosition(const G4int i=0) const;
-    // ------------------------------------------------------------------------
+    inline void SetSegmentHit(const SegmentHit* input) { segment_hit_ = input; }
+    inline SegmentHit* GetSegmentHit() const { return segment_hit_; }
+    // present particle -------------------------------------------------------
+    inline void SetPresentParticle(const ParticleHit* input) { present_particle_ = input; }
+    inline ParticleHit* GetPresentParticle() const { return present_particle_; }
+    // parent particles -------------------------------------------------------
+    inline void PushParentParticle(const ParticleHit* input) { parent_particles_.push_back(input); }
+    inline std::vector <ParticleHit*> GetParentParticles() const { return parent_particles_; }
+    inline void SetParentParticle(const G4int i, const ParticleHit* input) const;
+    inline ParticleHit* GetParentParticle(const ParticleHit i=0) const;
+    // daughter particles -------------------------------------------------------
+    inline void PushDaughterParticle(const ParticleHit* input) { daughter_particles_.push_back(input); }
+    inline std::vector <ParticleHit*> GetDaughterParticles() const { return daughter_particles_; }
+    inline void SetDaughterParticle(const G4int i, const ParticleHit* input) const;
+    inline ParticleHit* GetDaughterParticle(const ParticleHit i=0) const;
+    // incident momentum --------------------------------------------------------
+    inline void SetIncidentMomentum(const G4ThreeVector input) { incident_momentum_ = input; }
+    inline G4ThreeVector GetIncidentMomentum() const { return incident_momentum_; }
+    // incident position --------------------------------------------------------
+    inline void SetIncidentPosition(const G4ThreeVector input) { incident_position_ = input; }
+    inline G4ThreeVector GetIncidentPosition() const { return incident_position_; }
+    // hit data -----------------------------------------------------------------
+    inline void PushHitData(const G4double time, const hit_and_pos data ) { hit_data_.emplace(time,hit_and_pos); }
+    inline std::multimap <G4double,pos_and_de> GetHitData() const { return hit_data_; }
+    inline G4double GetHitTime() const;
+    inline G4double GetTotalEnergyDeposit() const;
+    inline G4ThreeVector GetHitPosition() const;
 
   private:
-    // hit segment
-    G4int segment_id_;
-    G4LogicalVolume* segment_logical_;
-    G4ThreeVector segment_position_;
-    G4RotationMatrix segment_rotation_;
-    // hit particle
-    G4int track_id_;
-    G4String particle_name_;
-    G4ThreeVector momentum_;
-    G4ThreeVector initial_momentum_;
-    G4double hit_time_;
-    G4double energy_deposit_;
-    G4ThreeVector global_position_;
-    // parent particle
-    G4int parent_id_;
-    G4String parent_name_;
-    G4ThreeVector parent_initial_momentum_;
-    // daughter particle
-    std::vector <G4int> daughter_ids_;
-    std::vector <G4String> daughter_names_;
-    std::vector <G4ThreeVector> daughter_momenta_;
-    std::vector <G4ThreeVector> daughter_initial_momenta_;
-    std::vector <G4double> daughter_hit_times_;
-    std::vector <G4double> daughter_energy_deposits_;
-    std::vector <G4ThreeVector> daugher_global_positions_;
+    // segment information
+    SegmentHit* segment_hit_;
+    // particle informations
+    ParticleHit* present_particle_;
+    std::vector <ParticleHit*> parent_particles_;
+    std::vector <ParticleHit*> daughter_particles_;
+    // hit informations
+    G4ThreeVector incident_position_;
+    G4ThreeVector incident_momentum_;
+    std::multimap <G4double,pos_and_de> hit_data_;
 };
 
 using HodoscopeHitsCollection = G4THitsCollection<HodoscopeHit>;

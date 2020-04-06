@@ -24,11 +24,10 @@
 // ********************************************************************
 //
 //
-/// \copied from B5HodoscopeHit.cc
-/// \brief Implementation of the HodoscopeHit class
+/// \file B5HodoscopeHit.cc
+/// \brief Implementation of the B5HodoscopeHit class
 
-#include "HodoscopeHit.hh"
-#include "Constants.hh"
+#include "B5HodoscopeHit.hh"
 
 #include "G4VVisManager.hh"
 #include "G4VisAttributes.hh"
@@ -44,108 +43,121 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
+G4ThreadLocal G4Allocator<B5HodoscopeHit>* B5HodoscopeHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit()
+B5HodoscopeHit::B5HodoscopeHit(G4int id,G4double time)
 : G4VHit(), 
-  segment_id_(-1), logical_(nullptr), position_(0), total_hits_(0)
+  fId(id), fTime(time), fPos(0.), fPLogV(nullptr)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::~HodoscopeHit()
+B5HodoscopeHit::~B5HodoscopeHit()
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit(const HodoscopeHit &right)
-  : G4VHit(),
-  // hit segment
-  segment_id_(right.segment_id_),
-  segment_logical_(right.segment_logical_),
-  segment_position_(right.segment_position_),
-  segment_rotation_(right.segment_rotation_),
-  // hit particle
-  track_id_(right.track_id_),
-  particle_name_(right.particle_name_),
-  momentum_(right.momentum_),
-  initial_momentum_(right.initial_momentum_),
-  hit_time_(right.hit_time_),
-  energy_deposit_(right.energy_deposit_),
-  global_position_(right.global_position_),
-  // parent particle
-  parent_id_(right.parent_id_),
-  parent_name_(right.parent_name_),
-  parent_initial_momentum_(right.parent_initial_momentum_),
-  // daughter particle
-  daughter_ids_(right.daughter_ids_),
-  daughter_names_(right.daughter_names_),
-  daughter_momenta_(right.daughter_momenta_),
-  daughter_initial_momenta_(right.daughter_initial_momenta_),
-  daughter_hit_times_(right.daughter_hit_times_),
-  daughter_energy_deposits_(right.daughter_energy_deposits_),
-  daughter_global_positions_(right.daughter_global_positions_),
+B5HodoscopeHit::B5HodoscopeHit(const B5HodoscopeHit &right)
+: G4VHit(),
+  fId(right.fId),
+  fTime(right.fTime),
+  fPos(right.fPos),
+  fRot(right.fRot),
+  fPLogV(right.fPLogV)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-const HodoscopeHit& HodoscopeHit::operator=(const HodoscopeHit &right)
+const B5HodoscopeHit& B5HodoscopeHit::operator=(const B5HodoscopeHit &right)
 {
-  segment_id_ = right.segment_id_;
-  logical_ = right.logical_;
-  position_ = right.position_;
-  rotation_ = right.rotation_;
-  total_hits_ = right.total_hits_;
-
-  track_id_ = right.track_id_;
-  parent_id_ = right.parent_id_;
-  particle_id_ = right.particle_id_;
-  hit_time_ = right.hit_time_;
-  energy_deposit_ = right.energy_deposit_;
-  local_position_ = right.local_position_;
-  global_position_ = right.global_position_;
-  momentum_ = right.momentum_;
-  polarization_ = right.polarization_;
-
+  fId = right.fId;
+  fTime = right.fTime;
+  fPos = right.fPos;
+  fRot = right.fRot;
+  fPLogV = right.fPLogV;
   return *this;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4bool HodoscopeHit::operator==(const HodoscopeHit &/*right*/) const
+G4bool B5HodoscopeHit::operator==(const B5HodoscopeHit &/*right*/) const
 {
   return false;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Draw()
+void B5HodoscopeHit::Draw()
 {
-  auto vis_manager = G4VVisManager::GetConcreteInstance();
-  if (! vis_manager) return;
-  G4VisAttributes attributes;
+  auto visManager = G4VVisManager::GetConcreteInstance();
+  if (! visManager) return;
 
-  // hit point
-  for(auto hit_position: global_position_){
-    G4Circle circle(hit_position);
-    circle.SetScreenSize(10);
-    circle.SetFillStyle(G4Circle::filled);
-    attributes.SetColour(MyColour::Hit());
-    circle.SetVisAttributes(attributes);
-    vis_manager->Draw(circle);
-  }
+  G4Transform3D trans(fRot.inverse(),fPos);
+  G4VisAttributes attribs;
+  auto pVA = fPLogV->GetVisAttributes();
+  if (pVA) attribs = *pVA;
+  G4Colour colour(0.,1.,1.);
+  attribs.SetColour(colour);
+  attribs.SetForceSolid(true);
+  visManager->Draw(*fPLogV,attribs,trans);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Print()
+const std::map<G4String,G4AttDef>* B5HodoscopeHit::GetAttDefs() const
 {
-  G4cout << "-------------------------------------" << G4endl;
-  G4cout << " segment    : " << segment_id_ << G4endl;
-  G4cout << " total hits : " << total_hits_ << G4endl;
-  G4cout << "-------------------------------------" << G4endl;
+  G4bool isNew;
+  auto store = G4AttDefStore::GetInstance("B5HodoscopeHit",isNew);
+
+  if (isNew) {
+    (*store)["HitType"] 
+      = G4AttDef("HitType","Hit Type","Physics","","G4String");
+    
+    (*store)["ID"] 
+      = G4AttDef("ID","ID","Physics","","G4int");
+    
+    (*store)["Time"] 
+      = G4AttDef("Time","Time","Physics","G4BestUnit","G4double");
+    
+    (*store)["Pos"] 
+      = G4AttDef("Pos","Position","Physics","G4BestUnit","G4ThreeVector");
+    
+    (*store)["LVol"] 
+      = G4AttDef("LVol","Logical Volume","Physics","","G4String");
+  }
+  return store;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+std::vector<G4AttValue>* B5HodoscopeHit::CreateAttValues() const
+{
+  auto values = new std::vector<G4AttValue>;
+  
+  values
+    ->push_back(G4AttValue("HitType","HodoscopeHit",""));
+  values
+    ->push_back(G4AttValue("ID",G4UIcommand::ConvertToString(fId),""));
+  values
+    ->push_back(G4AttValue("Time",G4BestUnit(fTime,"Time"),""));
+  values
+    ->push_back(G4AttValue("Pos",G4BestUnit(fPos,"Length"),""));
+  
+  if (fPLogV)
+    values->push_back(G4AttValue("LVol",fPLogV->GetName(),""));
+  else
+    values->push_back(G4AttValue("LVol"," ",""));
+  
+  return values;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void B5HodoscopeHit::Print()
+{
+  G4cout << "  Hodoscope[" << fId << "] " << fTime/ns << " (nsec)" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
