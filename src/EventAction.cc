@@ -28,7 +28,7 @@
 /// \brief Implementation of the EventAction class
 
 #include "EventAction.hh"
-#include "HodoscopeHit.hh"
+#include "DetectorHit.hh"
 #include "Analysis.hh"
 
 #include "G4Event.hh"
@@ -56,7 +56,7 @@ namespace {
     }
 
     auto hc = hce->GetHC(collId);
-    if ( ! hc) {
+    if (!hc) {
       G4ExceptionDescription msg;
       msg << "Hits collection " << collId << " of this event not found." << G4endl; 
       G4Exception("EventAction::EndOfEventAction()",
@@ -74,7 +74,7 @@ EventAction::EventAction()
 {
   G4RunManager::GetRunManager()->SetPrintProgress(1);
 
-  for(auto id: hodoscope_hitscollection_id_){
+  for(auto& id: hodoscope_hits_collection_ids_){
     id = -1;
   }
 }
@@ -92,13 +92,13 @@ void EventAction::BeginOfEventAction(const G4Event*)
   // and save them in the data members of this class
 
   // hodoscope
-  if (hodoscope_hitscollection_id_[0] == -1) {
+  if (hodoscope_hits_collection_ids_[0] == -1) {
     auto sd_manager = G4SDManager::GetSDMpointer();
 
     for (auto i_hodoscope = 0; i_hodoscope < Hodoscope::kTotalNumber; ++i_hodoscope) {
-      auto collection_name = Hodoscope::detector_name[i_hodoscope];
-      collection_name += "/hodoscope_hitscollection";
-      hodoscope_hitscollection_id_[i_hodoscope]
+      auto collection_name = Hodoscope::kDetectorNames[i_hodoscope];
+      collection_name.append("/hodoscope_hits_collection");
+      hodoscope_hits_collection_ids_[i_hodoscope]
         = sd_manager->GetCollectionID(collection_name);
     }
   }
@@ -111,28 +111,24 @@ void EventAction::EndOfEventAction(const G4Event* event)
   // Get analysis manager
   auto analysisManager = G4AnalysisManager::Instance();
 
-  // ======================================================
-  // DCIN =================================================
-  // ======================================================
-  //G4int dcin_total_hits = 0;
-  //G4ThreeVector dcin_position = G4ThreeVector(0);
-  //G4ThreeVector dcin_momentum = G4ThreeVector(0);
-  //G4bool dcin_has_hit = false;
+  // Check primary vertex
+  auto total_primaries = event->GetNumberOfPrimaryVertex();
+  G4cout << "total_primaries : " << total_primaries << G4endl;
 
-  //auto dcin_hc = GetHC(event,dc_hitcollection_id_[kDCINId]); 
-  //if(dcin_hc){
-  //  dcin_total_hits = dcin_hc->GetSize();
-  //  analysisManager->FillH1(dc_histogram_id_[0][kDCINId], dcin_total_hits );
-
-  //  if(dcin_total_hits>0){
-  //    dcin_has_hit = true;
-  //    auto hit = static_cast<HodoscopeHit*>(dcin_hc->GetHit(0));
-  //    dcin_position = hit->GetGlobalPosition();
-  //    dcin_momentum = hit->GetMomentum();
-  //    analysisManager->FillH1(dc_histogram_id_[1][kDCINId], dcin_momentum.theta()/deg);
-  //    analysisManager->FillH2(dc_histogram_id_[2][kDCINId], dcin_position.x(), dcin_position.y());
-  //  }
-  //}
+  // ======================================================
+  // Hodoscopes ===========================================
+  // ======================================================
+  for(auto i_hodoscope=0; i_hodoscope<Hodoscope::kTotalNumber; ++i_hodoscope){
+    auto hits_collection = GetHC(event,hodoscope_hits_collection_ids_[i_hodoscope]);
+    if(hits_collection){
+      for(G4int i_hit=0; i_hit<(G4int)hits_collection->GetSize(); ++i_hit){
+        auto hit = hits_collection->GetHit(i_hit);
+        if(hit){
+          hit->Print();
+        }
+      }
+    }
+  }
   // ======================================================
   // ======================================================
 

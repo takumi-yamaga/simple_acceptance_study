@@ -28,33 +28,38 @@
 /// \brief Implementation of the PrimaryGeneratorAction class
 
 #include "PrimaryGeneratorAction.hh"
-
 #include "G4Event.hh"
-#include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
 #include "G4GenericMessenger.hh"
-#include "G4SystemOfUnits.hh"
-#include "Randomize.hh"
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
 : G4VUserPrimaryGeneratorAction(),     
-  particlegun_(nullptr), messenger_(nullptr), 
-  proton_(nullptr),
-  momentum_(2.*GeV),
-  randomize_primary_(false)
+  messenger_(nullptr), phasespace_generator_(nullptr)
 {
-  G4int num_particle = 1;
-  particlegun_ = new G4ParticleGun(num_particle);
-  
-  auto particleTable = G4ParticleTable::GetParticleTable();
-  proton_ = particleTable->FindParticle("proton");
-  
-  // default particle kinematics
-  particlegun_->SetParticlePosition(G4ThreeVector(0.,0.,-250.*mm));
-  particlegun_->SetParticleDefinition(proton_);
+  total_primaries_=3;
+  particle_names_.push_back("lambda");
+  particle_names_.push_back("proton");
+  particle_names_.push_back("neutron");
+
+  // construction of particle guns
+  ConstructParticleGun();
+
+  // mode select
+  // 0 : shot (random momentum, direction)
+  // 1 : phase-space
+  primary_mode_ = 1;
+
+  // maximum momentum for shot-mode
+  shot_maximum_momentum_ = 500.*MeV;
+
+  // Lorentz vectors of beam and target for phase-space-mode
+  beam_momentum_ = 1.*GeV;
+  beam_particle_name_ = "kaon-";
+  target_particle_name_ = "He3";
+  SetBeamAndTarget();
   
   // define commands for this class
   DefineCommands();
@@ -64,7 +69,10 @@ PrimaryGeneratorAction::PrimaryGeneratorAction()
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction()
 {
-  delete particlegun_;
+  delete phasespace_generator_;
+  for(auto* particlegun : particleguns_){
+    delete particlegun;
+  }
   delete messenger_;
 }
 
@@ -72,22 +80,71 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
-  G4ParticleDefinition* particle = proton_;  
-  particlegun_->SetParticleDefinition(proton_);
+  switch(primary_mode_){
 
-  auto pp = momentum_;
-  auto mass = particle->GetPDGMass();
-  auto ekin = std::sqrt(pp*pp+mass*mass)-mass;
-  particlegun_->SetParticleEnergy(ekin);
+    case 0: // random-shot
+      GenerateShot(event);
+      break;
 
-  auto direction = G4ThreeVector(0.,0.,1.);
-  particlegun_->SetParticleMomentumDirection(direction);
+    case 1: // phase-space
+      GeneratePhaseSpace(event);
+      break;
 
-  auto polarization = G4ThreeVector(0.,1.,0.);
-  particlegun_->SetParticlePolarization(polarization);
-
-  particlegun_->GeneratePrimaryVertex(event);
+    default:
+      break;
+  }
 }
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void PrimaryGeneratorAction::ConstructParticleGun() 
+{
+  if(particleguns_.size()){
+    for(auto* particlegun : particleguns_){
+      delete particlegun;
+    }
+    particleguns_.clear();
+    particleguns_.shrink_to_fit();
+  }
+  if(particle_masses_.size()){
+    particle_masses_.clear();
+    particle_masses_.shrink_to_fit();
+  }
+  // construct particlegun
+  auto particle_table = G4ParticleTable::GetParticleTable();
+  for(auto particle_name : particle_names_){
+    G4ParticleDefinition* particle_definition = particle_table->FindParticle(particle_name);
+    auto particle_mass = particle_definition->GetPDGMass();
+    auto* particlegun = new G4ParticleGun();
+    particlegun->SetParticleDefinition(particle_definition);
+    particlegun->SetParticleEnergy(particle_mass);
+    particlegun->SetParticleMomentum(G4ThreeVector());
+    particlegun->SetParticlePosition(G4ThreeVector());
+    particleguns_.push_back(particlegun);
+    particle_masses_.push_back(particle_mass);
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void PrimaryGeneratorAction::SetBeamAndTarget() 
+{
+  auto particle_table = G4ParticleTable::GetParticleTable();
+
+  G4ParticleDefinition* beam_particle = particle_table->FindParticle(beam_particle_name_);
+  auto beam_mass = beam_particle->GetPDGMass();
+  auto beam_energy = sqrt(beam_mass*beam_mass+beam_momentum_*beam_momentum_);
+  beam_lv_ = TLorentzVector(0.,0.,beam_momentum_,beam_energy);
+  G4ParticleDefinition* target_particle = particle_table->FindParticle(target_particle_name_);
+  auto target_mass = target_particle->GetPDGMass();
+  target_lv_ = TLorentzVector(0.,0.,0.,target_mass);
+  initial_lv_ = beam_lv_ + target_lv_;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -100,24 +157,14 @@ void PrimaryGeneratorAction::DefineCommands()
         "Primary generator control");
 
   // momentum command
-  auto& momentumCmd
-    = messenger_->DeclarePropertyWithUnit("momentum", "GeV", momentum_, 
-        "Mean momentum of primaries.");
-  momentumCmd.SetParameterName("p", true);
-  momentumCmd.SetRange("p>=0.");                                
-  momentumCmd.SetDefaultValue("1.");
+  //auto& momentumCmd
+  //  = messenger_->DeclarePropertyWithUnit("momentum", "GeV", momentum_, 
+  //      "Mean momentum of primaries.");
+  //momentumCmd.SetParameterName("p", true);
+  //momentumCmd.SetRange("p>=0.");                                
+  //momentumCmd.SetDefaultValue("1.");
 
   // randomizePrimary command
-  auto& randomCmd
-    = messenger_->DeclareProperty("randomizePrimary", randomize_primary_);
-  G4String guidance
-    = "Boolean flag for randomizing primary particle types.\n";   
-  guidance
-    += "In case this flag is false, you can select the primary particle\n";
-  guidance += "  with /gun/particle command.";                               
-  randomCmd.SetGuidance(guidance);
-  randomCmd.SetParameterName("flg", true);
-  randomCmd.SetDefaultValue("true");
 }
 
 //..oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

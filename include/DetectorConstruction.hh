@@ -31,6 +31,7 @@
 #define DetectorConstruction_h 1
 
 #include "globals.hh"
+#include "Constants.hh"
 #include "G4VUserDetectorConstruction.hh"
 #include "G4RotationMatrix.hh"
 #include "G4FieldManager.hh"

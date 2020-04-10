@@ -24,34 +24,33 @@
 // ********************************************************************
 //
 //
-/// \copied from B5HodoscopeSD.hh
-/// \brief Definition of the HodoscopeSD class
+/// \file B5HodoscopeSD.hh
+/// \brief Definition of the B5HodoscopeSD class
 
-#ifndef HodoscopeSD_h
-#define HodoscopeSD_h 1
+#ifndef B5HodoscopeSD_h
+#define B5HodoscopeSD_h 1
 
 #include "G4VSensitiveDetector.hh"
-
-#include "DetectorHit.hh"
+#include "B5HodoscopeHit.hh"
 
 class G4Step;
 class G4HCofThisEvent;
 class G4TouchableHistory;
 
-/// Drift chamber sensitive detector
+/// Hodoscope sensitive detector
 
-class HodoscopeSD : public G4VSensitiveDetector
+class B5HodoscopeSD : public G4VSensitiveDetector
 {
   public:
-    HodoscopeSD(G4String name);
-    virtual ~HodoscopeSD();
+    B5HodoscopeSD(G4String name);
+    virtual ~B5HodoscopeSD();
     
     virtual void Initialize(G4HCofThisEvent*HCE);
-    virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
+    virtual G4bool ProcessHits(G4Step*aStep,G4TouchableHistory*ROhist);
     
   private:
-    DetectorHitsCollection* hits_collection_;
-    G4int hits_collection_id_;
+    B5HodoscopeHitsCollection* fHitsCollection;
+    G4int fHCID;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

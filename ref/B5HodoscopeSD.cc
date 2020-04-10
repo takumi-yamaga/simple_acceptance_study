@@ -24,41 +24,84 @@
 // ********************************************************************
 //
 //
-/// \copied from B5ActionInitialization.cc
-/// \brief Implementation of the ActionInitialization class
+/// \file B5HodoscopeSD.cc
+/// \brief Implementation of the B5HodoscopeSD class
 
-#include "ActionInitialization.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "RunAction.hh"
-#include "EventAction.hh"
+#include "B5HodoscopeSD.hh"
+#include "B5HodoscopeHit.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-ActionInitialization::ActionInitialization()
- : G4VUserActionInitialization()
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-ActionInitialization::~ActionInitialization()
-{}
+#include "G4HCofThisEvent.hh"
+#include "G4TouchableHistory.hh"
+#include "G4Track.hh"
+#include "G4Step.hh"
+#include "G4SDManager.hh"
+#include "G4ios.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void ActionInitialization::BuildForMaster() const
+B5HodoscopeSD::B5HodoscopeSD(G4String name)
+: G4VSensitiveDetector(name), 
+  fHitsCollection(nullptr), fHCID(-1)
 {
-  SetUserAction(new RunAction);
+  collectionName.insert( "hodoscopeColl");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void ActionInitialization::Build() const
+B5HodoscopeSD::~B5HodoscopeSD()
+{}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void B5HodoscopeSD::Initialize(G4HCofThisEvent* hce)
 {
-  SetUserAction(new PrimaryGeneratorAction());
+  fHitsCollection = new B5HodoscopeHitsCollection
+  (SensitiveDetectorName,collectionName[0]);
+  if (fHCID<0) { 
+    fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection); 
+  }
+  hce->AddHitsCollection(fHCID,fHitsCollection);
+}
 
-  SetUserAction(new EventAction());
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  SetUserAction(new RunAction());
-}  
+G4bool B5HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
+{
+  auto edep = step->GetTotalEnergyDeposit();
+  if (edep==0.) return true;
+  
+  auto preStepPoint = step->GetPreStepPoint();
+  auto touchable = preStepPoint->GetTouchable();
+  auto copyNo = touchable->GetVolume()->GetCopyNo();
+  auto hitTime = preStepPoint->GetGlobalTime();
+  
+  // check if this finger already has a hit
+  auto ix = -1;
+  for (auto i=0;i<fHitsCollection->entries();i++) {
+    if ((*fHitsCollection)[i]->GetID()==copyNo) {
+      ix = i;
+      break;
+    }
+  }
+
+  if (ix>=0) {
+    // if it has, then take the earlier time
+    if ((*fHitsCollection)[ix]->GetTime()>hitTime) { 
+      (*fHitsCollection)[ix]->SetTime(hitTime); 
+    }
+  }
+  else {
+    // if not, create a new hit and set it to the collection
+    auto hit = new B5HodoscopeHit(copyNo,hitTime);
+    auto physical = touchable->GetVolume();
+    hit->SetLogV(physical->GetLogicalVolume());
+    auto transform = touchable->GetHistory()->GetTopTransform();
+    transform.Invert();
+    hit->SetRot(transform.NetRotation());
+    hit->SetPos(transform.NetTranslation());
+    fHitsCollection->insert(hit);
+  }    
+  return true;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

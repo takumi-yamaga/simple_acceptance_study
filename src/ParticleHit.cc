@@ -24,41 +24,73 @@
 // ********************************************************************
 //
 //
-/// \copied from B5ActionInitialization.cc
-/// \brief Implementation of the ActionInitialization class
+/// \file of ParticleHit.cc
+/// \brief Implementation of the ParticleHit class
 
-#include "ActionInitialization.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "RunAction.hh"
-#include "EventAction.hh"
+#include "ParticleHit.hh"
+#include "Constants.hh"
+
+#include "G4ios.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-ActionInitialization::ActionInitialization()
- : G4VUserActionInitialization()
+G4ThreadLocal G4Allocator<ParticleHit>* ParticleHitAllocator;
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+ParticleHit::ParticleHit()
+: G4VHit(), 
+  generation_(-1), track_id_(-1), parent_id_(-1), particle_name_(""), initial_momentum_(0), initial_position_(0) 
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-ActionInitialization::~ActionInitialization()
+ParticleHit::~ParticleHit()
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void ActionInitialization::BuildForMaster() const
+ParticleHit::ParticleHit(const ParticleHit &right)
+  : G4VHit(),
+  // hit particle
+  generation_(right.generation_),
+  track_id_(right.track_id_),
+  parent_id_(right.parent_id_),
+  particle_name_(right.particle_name_),
+  initial_momentum_(right.initial_momentum_),
+  initial_position_(right.initial_position_)
+{}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+const ParticleHit& ParticleHit::operator=(const ParticleHit &right)
 {
-  SetUserAction(new RunAction);
+  generation_ = right.generation_;
+  track_id_ = right.track_id_;
+  parent_id_ = right.parent_id_;
+  particle_name_ = right.particle_name_;
+  initial_momentum_ = right.initial_momentum_;
+  initial_position_ = right.initial_position_;
+
+  return *this;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void ActionInitialization::Build() const
+G4bool ParticleHit::operator==(const ParticleHit &/*right*/) const
 {
-  SetUserAction(new PrimaryGeneratorAction());
+  return false;
+}
 
-  SetUserAction(new EventAction());
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-  SetUserAction(new RunAction());
-}  
+void ParticleHit::Print()
+{
+  G4cout << "ParticleHit -------------------------" << G4endl;
+  G4cout << " track_id      : " << track_id_ << G4endl;
+  G4cout << " parent_id     : " << parent_id_ << G4endl;
+  G4cout << " particle_name : " << particle_name_ << G4endl;
+  G4cout << "-------------------------------------" << G4endl;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

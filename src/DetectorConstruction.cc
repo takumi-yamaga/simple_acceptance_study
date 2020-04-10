@@ -30,7 +30,6 @@
 #include "DetectorConstruction.hh"
 #include "SolenoidMagneticField.hh"
 #include "HodoscopeSD.hh"
-#include "Constants.hh"
 
 #include "G4FieldManager.hh"
 #include "G4TransportationManager.hh"
@@ -117,8 +116,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         false,0,kCheckOverlaps);
 
   // magnetic field
-  auto magnetic_radius = 1822.*mm/2.;
-  auto magnetic_length = 3320.*mm;
+  //auto magnetic_radius = 1822.*mm/2.;
+  //auto magnetic_length = 3320.*mm;
+  auto magnetic_radius = 830.*mm + kSpace;
+  auto magnetic_length = 2870.*mm + kSpace;
   auto magnetic_solid
       = new G4Tubs("magnetic_solid",0.*mm,magnetic_radius,magnetic_length/2.,0.*deg,360.*deg);
   magnetic_logical_ = new G4LogicalVolume(magnetic_solid,air,"magnetic_logical");
@@ -138,8 +139,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       magnetic_logical_,false,0,kCheckOverlaps);
 
   // cdh
-  auto cdh_radius = 40.*cm;
-  auto cdh_length = 100.*cm;
+  auto cdh_radius = 530.*mm;
+  auto cdh_length = 2570.*mm;
   auto cdh_thickness = 30.*mm;
   auto cdh_solid 
     = new G4Tubs("cdh_solid",cdh_radius-cdh_thickness/2.,cdh_radius+cdh_thickness/2.,cdh_length/2.,0.*deg,360.*deg);
@@ -157,7 +158,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto disc_segment1_transform = G4ThreeVector(0.*mm,0.*mm,-cdh_length/2.-disc_thickness/2.-kSpace);
   new G4PVPlacement(0,disc_segment1_transform,disc_logical_,"disc_segment1_physical",
       magnetic_logical_,false,0,kCheckOverlaps);
-  auto disc_segment2_transform = G4ThreeVector(0.*mm,0.*mm,+cdh_length/2.+disc_thickness/2.-kSpace);
+  auto disc_segment2_transform = G4ThreeVector(0.*mm,0.*mm,+cdh_length/2.+disc_thickness/2.+kSpace);
   new G4PVPlacement(0,disc_segment2_transform,disc_logical_,"disc_segment2_physical",
       magnetic_logical_,false,1,kCheckOverlaps);
 
@@ -197,10 +198,10 @@ void DetectorConstruction::ConstructSDandField()
   // sensitive detectors -----------------------------------------------------
   auto sdManager = G4SDManager::GetSDMpointer();
   G4String sensitive_detector_name;
-  auto cdh = new HodoscopeSD(sensitive_detector_name="/cdh");
+  auto cdh = new HodoscopeSD(sensitive_detector_name="cdh");
   sdManager->AddNewDetector(cdh);
   cdh_logical_->SetSensitiveDetector(cdh);
-  auto disc = new HodoscopeSD(sensitive_detector_name="/disc");
+  auto disc = new HodoscopeSD(sensitive_detector_name="disc");
   sdManager->AddNewDetector(disc);
   disc_logical_->SetSensitiveDetector(disc);
   // -------------------------------------------------------------------------
@@ -244,7 +245,7 @@ void DetectorConstruction::ConstructMaterials()
   nistManager->FindOrBuildMaterial("G4_Galactic");
 
   // liquid-He3
-  new G4Material("liquid He3",2.,3.016029*g/mole,81.2*mg/cm3,kStateLiquid);
+  new G4Material("liquid_He3",2.,3.016029*g/mole,81.2*mg/cm3,kStateLiquid);
 
   G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
