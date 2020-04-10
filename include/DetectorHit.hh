@@ -41,11 +41,6 @@
 class SegmentHit;
 class ParticleHit;
 
-struct pos_and_de{
-  G4ThreeVector pos;
-  G4double de;
-}
-
 class DetectorHit : public G4VHit
 {
   public:
@@ -63,33 +58,39 @@ class DetectorHit : public G4VHit
     virtual void Print();
 
     // segment informations ---------------------------------------------------
-    inline void SetSegmentHit(const SegmentHit* input) { segment_hit_ = input; }
+    inline void SetSegmentHit(SegmentHit* input) { segment_hit_ = input; }
     inline SegmentHit* GetSegmentHit() const { return segment_hit_; }
     // present particle -------------------------------------------------------
-    inline void SetPresentParticle(const ParticleHit* input) { present_particle_ = input; }
+    inline void SetPresentParticle(ParticleHit* input) { present_particle_ = input; }
     inline ParticleHit* GetPresentParticle() const { return present_particle_; }
     // parent particles -------------------------------------------------------
-    inline void PushParentParticle(const ParticleHit* input) { parent_particles_.push_back(input); }
+    inline void PushParentParticle(ParticleHit* input) { parent_particles_.push_back(input); }
     inline std::vector <ParticleHit*> GetParentParticles() const { return parent_particles_; }
-    inline void SetParentParticle(const G4int i, const ParticleHit* input) const;
-    inline ParticleHit* GetParentParticle(const ParticleHit i=0) const;
+    inline void SetParentParticle(const G4int i, ParticleHit* input);
+    inline ParticleHit* GetParentParticle(const G4int i) const;
     // daughter particles -------------------------------------------------------
-    inline void PushDaughterParticle(const ParticleHit* input) { daughter_particles_.push_back(input); }
+    inline void PushDaughterParticle(ParticleHit* input) { daughter_particles_.push_back(input); }
     inline std::vector <ParticleHit*> GetDaughterParticles() const { return daughter_particles_; }
-    inline void SetDaughterParticle(const G4int i, const ParticleHit* input) const;
-    inline ParticleHit* GetDaughterParticle(const ParticleHit i=0) const;
+    inline void SetDaughterParticle(const G4int i, ParticleHit* input);
+    inline ParticleHit* GetDaughterParticle(const G4int i) const;
     // incident momentum --------------------------------------------------------
     inline void SetIncidentMomentum(const G4ThreeVector input) { incident_momentum_ = input; }
     inline G4ThreeVector GetIncidentMomentum() const { return incident_momentum_; }
-    // incident position --------------------------------------------------------
-    inline void SetIncidentPosition(const G4ThreeVector input) { incident_position_ = input; }
-    inline G4ThreeVector GetIncidentPosition() const { return incident_position_; }
-    // hit data -----------------------------------------------------------------
-    inline void PushHitData(const G4double time, const hit_and_pos data ) { hit_data_.emplace(time,hit_and_pos); }
-    inline std::multimap <G4double,pos_and_de> GetHitData() const { return hit_data_; }
-    inline G4double GetHitTime() const;
-    inline G4double GetTotalEnergyDeposit() const;
-    inline G4ThreeVector GetHitPosition() const;
+    // hit time -----------------------------------------------------------------
+    inline void PushHitTime(G4double input) { hit_times_.push_back(input); }
+    inline std::vector <G4double> GetHitTimes() const { return hit_times_; }
+    inline void SetHitTime(const G4int i, G4double input);
+    inline G4double GetHitTime(const G4int i) const;
+    // energy deposit -----------------------------------------------------------
+    inline void PushEnergyDeposit(G4double input) { energy_deposits_.push_back(input); }
+    inline std::vector <G4double> GetEnergyDeposits() const { return energy_deposits_; }
+    inline void SetEnergyDeposit(const G4int i, G4double input);
+    inline G4double GetEnergyDeposit(const G4int i) const;
+    // hit position -------------------------------------------------------------
+    inline void PushHitPosition(G4ThreeVector input) { hit_positions_.push_back(input); }
+    inline std::vector <G4ThreeVector> GetHitPositions() const { return hit_positions_; }
+    inline void SetHitPosition(const G4int i, G4ThreeVector input);
+    inline G4ThreeVector GetHitPosition(const G4int i) const;
 
   private:
     // segment information
@@ -99,205 +100,143 @@ class DetectorHit : public G4VHit
     std::vector <ParticleHit*> parent_particles_;
     std::vector <ParticleHit*> daughter_particles_;
     // hit informations
-    G4ThreeVector incident_position_;
     G4ThreeVector incident_momentum_;
-    std::multimap <G4double,pos_and_de> hit_data_;
+    std::vector <G4double> hit_times_;
+    std::vector <G4double> energy_deposits_;
+    std::vector <G4ThreeVector> hit_positions_;
 };
 
-using HodoscopeHitsCollection = G4THitsCollection<HodoscopeHit>;
+using DetectorHitsCollection = G4THitsCollection<DetectorHit>;
 
-extern G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
+extern G4ThreadLocal G4Allocator<DetectorHit>* DetectorHitAllocator;
 
-inline void* HodoscopeHit::operator new(size_t)
+//....oooOO0OOooo....//
+// inline functions  //
+//....oooOO0OOooo....//
+
+// new & delete -----------------------------------------------------
+inline void* DetectorHit::operator new(size_t)
 {
-  if (!HodoscopeHitAllocator) {
-    HodoscopeHitAllocator = new G4Allocator<HodoscopeHit>;
+  if (!DetectorHitAllocator) {
+    DetectorHitAllocator = new G4Allocator<DetectorHit>;
   }
-  return (void*)HodoscopeHitAllocator->MallocSingle();
+  return (void*)DetectorHitAllocator->MallocSingle();
 }
 
-inline void HodoscopeHit::operator delete(void* aHit)
+inline void DetectorHit::operator delete(void* aHit)
 {
-  HodoscopeHitAllocator->FreeSingle((HodoscopeHit*) aHit);
+  DetectorHitAllocator->FreeSingle((DetectorHit*) aHit);
 }
-
-// daughter_ids -----------------------------------------------------
-inline void HodoscopeHit::SetDaughterID(const G4int i, const G4int input){
-  if(i<daughter_ids_.size()){
-    daughter_ids_[i_hit] = input;
+// parent particle --------------------------------------------------
+inline void DetectorHit::SetParentParticle(const G4int i, ParticleHit* input){
+  if(i<(G4int)parent_particles_.size()){
+    parent_particles_[i] = input;
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterID()", "", EventMustBeAborted, msg);
+    G4Exception("DetectorHit::SetParentParticle()", "", EventMustBeAborted, msg);
   }
 }
-inline G4int HodoscopeHit::GetDaughterID(const G4int i=0) const{
-  if(i<daughter_ids_.size()){
-    return daughter_ids_[i];
+inline ParticleHit* DetectorHit::GetParentParticle(const G4int i=0) const{
+  if(i<(G4int)parent_particles_.size()){
+    return parent_particles_[i];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterID(G4int)", "", EventMustBeAborted, msg);
-    return -1;
+    G4Exception("DetectorHit::GetParentParticle(G4int)", "", EventMustBeAborted, msg);
+    return nullptr;
   }
 }
-// ------------------------------------------------------------------
-
-// daughter_names ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterName(const G4int i, const G4String input){
-  if(i<daughter_names_.size()){
-    daughter_names_[i_hit] = input;
+// daughter particle -------------------------------------------------
+inline void DetectorHit::SetDaughterParticle(const G4int i, ParticleHit* input){
+  if(i<(G4int)daughter_particles_.size()){
+    daughter_particles_[i] = input;
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterName()", "", EventMustBeAborted, msg);
+    G4Exception("DetectorHit::SetDaughterParticle()", "", EventMustBeAborted, msg);
   }
 }
-inline G4String HodoscopeHit::GetDaughterName(const G4int i=0) const{
-  if(i<daughter_names_.size()){
-    return daughter_names_[i];
+inline ParticleHit* DetectorHit::GetDaughterParticle(const G4int i=0) const{
+  if(i<(G4int)daughter_particles_.size()){
+    return daughter_particles_[i];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterName(G4int)", "", EventMustBeAborted, msg);
-    return -1;
+    G4Exception("DetectorHit::GetDaughterParticle(G4int)", "", EventMustBeAborted, msg);
+    return nullptr;
   }
 }
-// ------------------------------------------------------------------
-
-// daughter_momenta ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterMomentum(const G4int i, const G4ThreeVector input){
-  if(i<daughter_momenta_.size()){
-    daughter_momenta_[i_hit] = input;
+// hit time ----------------------------------------------------------
+inline void DetectorHit::SetHitTime(const G4int i, G4double input){
+  if(i<(G4int)hit_times_.size()){
+    hit_times_[i] = input;
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterMomentum()", "", EventMustBeAborted, msg);
+    G4Exception("DetectorHit::SetHitTime()", "", EventMustBeAborted, msg);
   }
 }
-inline G4ThreeVector HodoscopeHit::GetDaughterMomentum(const G4int i=0) const{
-  if(i<daughter_momenta_.size()){
-    return daughter_momenta_[i];
+inline G4double DetectorHit::GetHitTime(const G4int i=0) const{
+  if(i<(G4int)hit_times_.size()){
+    return hit_times_[i];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterMomentum(G4int)", "", EventMustBeAborted, msg);
-    return -1;
+    G4Exception("DetectorHit::GetHitTime(G4int)", "", EventMustBeAborted, msg);
+    return -999.;
   }
 }
-// ------------------------------------------------------------------
-
-// daughter_initial_momenta ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterInitialMomentum(const G4int i, const G4ThreeVector input){
-  if(i<daughter_initial_momenta_.size()){
-    daughter_initial_momenta_[i_hit] = input;
+// energy deposit ----------------------------------------------------
+inline void DetectorHit::SetEnergyDeposit(const G4int i, G4double input){
+  if(i<(G4int)energy_deposits_.size()){
+    energy_deposits_[i] = input;
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterInitialMomentum()", "", EventMustBeAborted, msg);
+    G4Exception("DetectorHit::SetEnergyDeposit()", "", EventMustBeAborted, msg);
   }
 }
-inline G4ThreeVector HodoscopeHit::GetDaughterInitialMomentum(const G4int i=0) const{
-  if(i<daughter_initial_momenta_.size()){
-    return daughter_initial_momenta_[i];
+inline G4double DetectorHit::GetEnergyDeposit(const G4int i=0) const{
+  if(i<(G4int)energy_deposits_.size()){
+    return energy_deposits_[i];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterInitialMomentum(G4int)", "", EventMustBeAborted, msg);
-    return -1;
+    G4Exception("DetectorHit::GetEnergyDeposit(G4int)", "", EventMustBeAborted, msg);
+    return -999.;
   }
 }
-// ------------------------------------------------------------------
-
-// daughter_hit_time ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterHitTime(const G4int i, const G4double input){
-  if(i<daughter_hit_time_.size()){
-    daughter_hit_time_[i_hit] = input;
+// hit position ------------------------------------------------------
+inline void DetectorHit::SetHitPosition(const G4int i, G4ThreeVector input){
+  if(i<(G4int)hit_positions_.size()){
+    hit_positions_[i] = input;
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterHitTime()", "", EventMustBeAborted, msg);
+    G4Exception("DetectorHit::SetHitPosition()", "", EventMustBeAborted, msg);
   }
 }
-inline G4double HodoscopeHit::GetDaughterHitTime(const G4int i=0) const{
-  if(i<daughter_hit_time_.size()){
-    return daughter_hit_time_[i];
+inline G4ThreeVector DetectorHit::GetHitPosition(const G4int i=0) const{
+  if(i<(G4int)hit_positions_.size()){
+    return hit_positions_[i];
   }
   else{
     G4ExceptionDescription msg;
     msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterHitTime(G4int)", "", EventMustBeAborted, msg);
-    return -1;
+    G4Exception("DetectorHit::GetHitPosition(G4int)", "", EventMustBeAborted, msg);
+    return G4ThreeVector(0.);
   }
 }
-// ------------------------------------------------------------------
-
-// daughter_energy_deposit ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterEnergyDeposit(const G4int i, const G4double input){
-  if(i<daughter_energy_deposit_.size()){
-    daughter_energy_deposit_[i_hit] = input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterEnergyDeposit()", "", EventMustBeAborted, msg);
-  }
-}
-inline void HodoscopeHit::AddDaughterEnergyDeposit(const G4int i, const G4double input){
-  if(i<daughter_energy_deposit_.size()){
-    daughter_energy_deposit_[i_hit] += input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterEnergyDeposit()", "", EventMustBeAborted, msg);
-  }
-}
-inline G4double HodoscopeHit::GetDaughterEnergyDeposit(const G4int i=0) const{
-  if(i<daughter_energy_deposit_.size()){
-    return daughter_energy_deposit_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterEnergyDeposit(G4int)", "", EventMustBeAborted, msg);
-    return -1;
-  }
-}
-// ------------------------------------------------------------------
-
-// daughter_global_positions ---------------------------------------------------
-inline void HodoscopeHit::SetDaughterGlobalPosition(const G4int i, const G4ThreeVector input){
-  if(i<daughter_global_positions_.size()){
-    daughter_global_positions_[i_hit] = input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::SetDaughterGlobalPosition()", "", EventMustBeAborted, msg);
-  }
-}
-inline G4ThreeVector HodoscopeHit::GetDaughterGlobalPosition(const G4int i=0) const{
-  if(i<daughter_global_positions_.size()){
-    return daughter_global_positions_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("HodoscopeHit::GetDaughterGlobalPosition(G4int)", "", EventMustBeAborted, msg);
-    return -1;
-  }
-}
-// ------------------------------------------------------------------
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

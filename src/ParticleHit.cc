@@ -40,7 +40,7 @@ G4ThreadLocal G4Allocator<ParticleHit>* ParticleHitAllocator;
 
 ParticleHit::ParticleHit()
 : G4VHit(), 
-  generation_(-1), track_id_(-1), parent_id(-1), particle_name_(""), initial_momentum_(0), initial_position(0) 
+  generation_(-1), track_id_(-1), parent_id_(-1), particle_name_(""), initial_momentum_(0), initial_position_(0) 
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -58,7 +58,7 @@ ParticleHit::ParticleHit(const ParticleHit &right)
   parent_id_(right.parent_id_),
   particle_name_(right.particle_name_),
   initial_momentum_(right.initial_momentum_),
-  initial_position_(right.initial_position_),
+  initial_position_(right.initial_position_)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -88,6 +88,7 @@ void ParticleHit::Print()
 {
   G4cout << "ParticleHit -------------------------" << G4endl;
   G4cout << " track_id      : " << track_id_ << G4endl;
+  G4cout << " parent_id     : " << parent_id_ << G4endl;
   G4cout << " particle_name : " << particle_name_ << G4endl;
   G4cout << "-------------------------------------" << G4endl;
 }

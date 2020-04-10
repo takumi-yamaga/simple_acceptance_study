@@ -198,10 +198,10 @@ void DetectorConstruction::ConstructSDandField()
   // sensitive detectors -----------------------------------------------------
   auto sdManager = G4SDManager::GetSDMpointer();
   G4String sensitive_detector_name;
-  auto cdh = new HodoscopeSD(sensitive_detector_name="/cdh");
+  auto cdh = new HodoscopeSD(sensitive_detector_name="cdh");
   sdManager->AddNewDetector(cdh);
   cdh_logical_->SetSensitiveDetector(cdh);
-  auto disc = new HodoscopeSD(sensitive_detector_name="/disc");
+  auto disc = new HodoscopeSD(sensitive_detector_name="disc");
   sdManager->AddNewDetector(disc);
   disc_logical_->SetSensitiveDetector(disc);
   // -------------------------------------------------------------------------

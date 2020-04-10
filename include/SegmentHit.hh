@@ -62,8 +62,8 @@ class SegmentHit : public G4VHit
     inline void SetLogicalVolume(G4LogicalVolume* input) { segment_logical_ = input; }
     inline G4LogicalVolume* GetLogicalVolume() const { return segment_logical_; }
     // segment_position -------------------------------------------------------
-    inline void SetPosition(const G4ThreeVector input) { segment_position_ = input; }
-    inline G4ThreeVector GetPosition() const { return segment_position_; }
+    inline void SetTranslation(const G4ThreeVector input) { segment_translation_ = input; }
+    inline G4ThreeVector GetTranslation() const { return segment_translation_; }
     // segment_rotation -------------------------------------------------------
     inline void SetRotation(const G4RotationMatrix input) { segment_rotation_ = input; }
     inline G4RotationMatrix GetRotation() const { return segment_rotation_; }
@@ -73,7 +73,7 @@ class SegmentHit : public G4VHit
     // hit segment
     G4int segment_id_;
     G4LogicalVolume* segment_logical_;
-    G4ThreeVector segment_position_;
+    G4ThreeVector segment_translation_;
     G4RotationMatrix segment_rotation_;
 };
 

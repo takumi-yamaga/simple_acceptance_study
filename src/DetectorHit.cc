@@ -24,10 +24,10 @@
 // ********************************************************************
 //
 //
-/// \copied from B5HodoscopeHit.cc
-/// \brief Implementation of the HodoscopeHit class
+/// \file of DetectorHit.cc
+/// \brief Implementation of the DetectorHit class
 
-#include "HodoscopeHit.hh"
+#include "DetectorHit.hh"
 #include "Constants.hh"
 #include "SegmentHit.hh"
 #include "ParticleHit.hh"
@@ -46,92 +46,70 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreadLocal G4Allocator<HodoscopeHit>* HodoscopeHitAllocator;
+G4ThreadLocal G4Allocator<DetectorHit>* DetectorHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit()
+DetectorHit::DetectorHit()
 : G4VHit(), 
-  segment_id_(-1), logical_(nullptr), position_(0), total_hits_(0)
+  segment_hit_(nullptr), present_particle_(nullptr), incident_momentum_(0) 
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::~HodoscopeHit()
+DetectorHit::~DetectorHit()
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-HodoscopeHit::HodoscopeHit(const HodoscopeHit &right)
+DetectorHit::DetectorHit(const DetectorHit &right)
   : G4VHit(),
-  // hit segment
-  segment_id_(right.segment_id_),
-  segment_logical_(right.segment_logical_),
-  segment_position_(right.segment_position_),
-  segment_rotation_(right.segment_rotation_),
-  // hit particle
-  track_id_(right.track_id_),
-  particle_name_(right.particle_name_),
-  momentum_(right.momentum_),
-  initial_momentum_(right.initial_momentum_),
-  hit_time_(right.hit_time_),
-  energy_deposit_(right.energy_deposit_),
-  global_position_(right.global_position_),
-  // parent particle
-  parent_id_(right.parent_id_),
-  parent_name_(right.parent_name_),
-  parent_initial_momentum_(right.parent_initial_momentum_),
-  // daughter particle
-  daughter_ids_(right.daughter_ids_),
-  daughter_names_(right.daughter_names_),
-  daughter_momenta_(right.daughter_momenta_),
-  daughter_initial_momenta_(right.daughter_initial_momenta_),
-  daughter_hit_times_(right.daughter_hit_times_),
-  daughter_energy_deposits_(right.daughter_energy_deposits_),
-  daughter_global_positions_(right.daughter_global_positions_),
+  segment_hit_(right.segment_hit_),
+  present_particle_(right.present_particle_),
+  parent_particles_(right.parent_particles_),
+  daughter_particles_(right.daughter_particles_),
+  incident_momentum_(right.incident_momentum_),
+  hit_times_(right.hit_times_),
+  energy_deposits_(right.energy_deposits_),
+  hit_positions_(right.hit_positions_)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-const HodoscopeHit& HodoscopeHit::operator=(const HodoscopeHit &right)
+const DetectorHit& DetectorHit::operator=(const DetectorHit &right)
 {
-  segment_id_ = right.segment_id_;
-  logical_ = right.logical_;
-  position_ = right.position_;
-  rotation_ = right.rotation_;
-  total_hits_ = right.total_hits_;
-
-  track_id_ = right.track_id_;
-  parent_id_ = right.parent_id_;
-  particle_id_ = right.particle_id_;
-  hit_time_ = right.hit_time_;
-  energy_deposit_ = right.energy_deposit_;
-  local_position_ = right.local_position_;
-  global_position_ = right.global_position_;
-  momentum_ = right.momentum_;
-  polarization_ = right.polarization_;
+  segment_hit_ = right.segment_hit_;
+  present_particle_ = right.present_particle_;
+  parent_particles_ = right.parent_particles_;
+  daughter_particles_ = right.daughter_particles_;
+  incident_momentum_ = right.incident_momentum_;
+  hit_times_ = right.hit_times_;
+  energy_deposits_ = right.energy_deposits_;
+  hit_positions_ = right.hit_positions_;
 
   return *this;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4bool HodoscopeHit::operator==(const HodoscopeHit &/*right*/) const
+G4bool DetectorHit::operator==(const DetectorHit &/*right*/) const
 {
   return false;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Draw()
+void DetectorHit::Draw()
 {
-  auto vis_manager = G4VVisManager::GetConcreteInstance();
-  if (! vis_manager) return;
-  G4VisAttributes attributes;
+  // drawing segment hit
+  //segment_hit_->Draw();
 
-  // hit point
-  for(auto hit_position: global_position_){
-    G4Circle circle(hit_position);
+  // hit point (only incident position)
+  if(hit_positions_.size()){
+    auto vis_manager = G4VVisManager::GetConcreteInstance();
+    if (! vis_manager) return;
+    G4VisAttributes attributes;
+    G4Circle circle(hit_positions_[0]);
     circle.SetScreenSize(10);
     circle.SetFillStyle(G4Circle::filled);
     attributes.SetColour(MyColour::Hit());
@@ -142,12 +120,26 @@ void HodoscopeHit::Draw()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void HodoscopeHit::Print()
+void DetectorHit::Print()
 {
+  G4cout << G4endl;
   G4cout << "-------------------------------------" << G4endl;
-  G4cout << " segment    : " << segment_id_ << G4endl;
-  G4cout << " total hits : " << total_hits_ << G4endl;
+  G4cout << "Detector Hit ------------------------" << G4endl;
+
+  G4cout << "segmen_hit_ -------------------------" << G4endl;
+  segment_hit_->Print();
+
+  G4cout << "present_particle_ -------------------" << G4endl;
+  present_particle_->Print();
+
+  G4cout << "daughter_particle_ ------------------" << G4endl;
+  for(auto& daughter_particle: daughter_particles_){
+    daughter_particle->Print();
+  }
+
   G4cout << "-------------------------------------" << G4endl;
+  G4cout << "-------------------------------------" << G4endl;
+  G4cout << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -32,7 +32,7 @@
 
 #include "G4VSensitiveDetector.hh"
 
-#include "HodoscopeHit.hh"
+#include "DetectorHit.hh"
 
 class G4Step;
 class G4HCofThisEvent;
@@ -50,7 +50,7 @@ class HodoscopeSD : public G4VSensitiveDetector
     virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
     
   private:
-    HodoscopeHitsCollection* hits_collection_;
+    DetectorHitsCollection* hits_collection_;
     G4int hits_collection_id_;
 };
 

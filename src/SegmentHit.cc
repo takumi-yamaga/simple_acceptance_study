@@ -43,7 +43,7 @@ G4ThreadLocal G4Allocator<SegmentHit>* SegmentHitAllocator;
 
 SegmentHit::SegmentHit()
 : G4VHit(), 
-  segment_id_(-1), logical_(nullptr), position_(0)
+  segment_id_(-1), segment_logical_(nullptr), segment_translation_(0)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -58,8 +58,8 @@ SegmentHit::SegmentHit(const SegmentHit &right)
   // hit segment
   segment_id_(right.segment_id_),
   segment_logical_(right.segment_logical_),
-  segment_position_(right.segment_position_),
-  segment_rotation_(right.segment_rotation_),
+  segment_translation_(right.segment_translation_),
+  segment_rotation_(right.segment_rotation_)
 {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -67,9 +67,9 @@ SegmentHit::SegmentHit(const SegmentHit &right)
 const SegmentHit& SegmentHit::operator=(const SegmentHit &right)
 {
   segment_id_ = right.segment_id_;
-  logical_ = right.logical_;
-  position_ = right.position_;
-  rotation_ = right.rotation_;
+  segment_logical_ = right.segment_logical_;
+  segment_translation_ = right.segment_translation_;
+  segment_rotation_ = right.segment_rotation_;
 
   return *this;
 }
@@ -90,13 +90,13 @@ void SegmentHit::Draw()
   G4VisAttributes attributes;
 
   // hit segment
-  auto logical_attributes = logical_->GetVisAttributes();
+  auto logical_attributes = segment_logical_->GetVisAttributes();
   if (logical_attributes){
     attributes = *logical_attributes;
     attributes.SetColour(MyColour::ScintillatorHasHit());
     attributes.SetForceSolid(true); // drawing solid shape
-    G4Transform3D transform(rotation_.inverse(),position_);
-    vis_manager->Draw(*logical_,attributes,transform);
+    G4Transform3D transform(segment_rotation_.inverse(),segment_translation_);
+    vis_manager->Draw(*segment_logical_,attributes,transform);
   }
 }
 
@@ -107,9 +107,9 @@ void SegmentHit::Print()
   G4cout << "-------------------------------------" << G4endl;
   G4cout << "SegmentHit --------------------------" << G4endl;
   G4cout << " segment    : " << segment_id_ << G4endl;
-  G4cout << " position-x : " << position_ .x()<< G4endl;
-  G4cout << " position-y : " << position_ .y()<< G4endl;
-  G4cout << " position-z : " << position_ .z()<< G4endl;
+  G4cout << " translation-x : " << segment_translation_ .x()<< G4endl;
+  G4cout << " translation-y : " << segment_translation_ .y()<< G4endl;
+  G4cout << " translation-z : " << segment_translation_ .z()<< G4endl;
   G4cout << "-------------------------------------" << G4endl;
 }
 

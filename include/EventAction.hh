@@ -51,7 +51,7 @@ public:
 
 private:
     // hit collections Ids
-    std::array<G4int, Hodoscope::kTotalNumber> hodoscope_hitscollection_id_;
+    std::array<G4int, Hodoscope::kTotalNumber> hodoscope_hits_collection_ids_;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

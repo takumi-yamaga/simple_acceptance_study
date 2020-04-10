@@ -41,8 +41,10 @@ using std::array;
 // hodoscopes
 namespace Hodoscope{
   constexpr G4int kTotalNumber = 2;
-  const array<G4String, kTotalNumber> detector_name
-    = {{ "hodoscope1", "hodoscope2" }};
+  const array<G4String, kTotalNumber> kDetectorNames
+    = {{ "cdh", "disc" }};
+  const G4int kCDHId = 0;
+  const G4int kDISCId = 1;
 }
 
 namespace MyColour{

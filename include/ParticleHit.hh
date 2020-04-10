@@ -64,8 +64,8 @@ class ParticleHit : public G4VHit
     inline void SetParticleName(const G4String input) { particle_name_ = input; }
     inline G4String GetParticleName() const { return particle_name_; }
     // initial_momentum -------------------------------------------------------
-    inline void SetInitialMomentumg(const G4ThreeVector input) { initial_momentum_ = input; }
-    inline G4ThreeVector GetInitialMomentumg() const { return initial_momentum_; }
+    inline void SetInitialMomentum(const G4ThreeVector input) { initial_momentum_ = input; }
+    inline G4ThreeVector GetInitialMomentum() const { return initial_momentum_; }
     // initial_position -------------------------------------------------------
     inline void SetInitialPosition(const G4ThreeVector input) { initial_position_ = input; }
     inline G4ThreeVector GetInitialPosition() const { return initial_position_; }
