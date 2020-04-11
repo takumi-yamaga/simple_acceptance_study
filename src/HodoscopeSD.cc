@@ -124,9 +124,9 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
       if(daughter_particle->GetTrackID() == track_id){
         daughter_already_hit = true;
         // add new hit data
-      hit->PushHitTime(hit_time);
-      hit->PushEnergyDeposit(energy_deposit);
-      hit->PushHitPosition(hit_position);
+        hit->PushHitTime(hit_time);
+        hit->PushEnergyDeposit(energy_deposit);
+        hit->PushHitPosition(hit_position);
         break;
       }
     } 

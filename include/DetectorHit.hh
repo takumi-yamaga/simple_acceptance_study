@@ -36,7 +36,6 @@
 #include "G4ThreeVector.hh"
 
 #include <vector>
-#include <map>
 
 class SegmentHit;
 class ParticleHit;
