@@ -29,8 +29,6 @@
 
 #include "DetectorHit.hh"
 #include "Constants.hh"
-#include "SegmentHit.hh"
-#include "ParticleHit.hh"
 
 #include "G4VVisManager.hh"
 #include "G4VisAttributes.hh"

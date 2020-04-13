@@ -32,6 +32,7 @@
 
 #include "G4VVisManager.hh"
 #include "G4VisAttributes.hh"
+#include "G4VTouchable.hh"
 #include "G4Colour.hh"
 #include "G4ios.hh"
 
@@ -55,12 +56,19 @@ SegmentHit::~SegmentHit()
 
 SegmentHit::SegmentHit(const SegmentHit &right)
   : G4VHit(),
-  // hit segment
   segment_id_(right.segment_id_),
   segment_logical_(right.segment_logical_),
   segment_translation_(right.segment_translation_),
   segment_rotation_(right.segment_rotation_)
 {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+SegmentHit::SegmentHit(const G4VTouchable* touchable)
+  : G4VHit()
+{
+  this->SetSegmentHit(touchable);
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

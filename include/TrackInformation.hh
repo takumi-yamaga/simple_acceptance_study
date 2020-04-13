@@ -15,48 +15,50 @@
 
 class TrackInformation : public G4VUserTrackInformation 
 {
-public:
-  TrackInformation();
-  TrackInformation(const G4Track* track);
-  TrackInformation(const TrackInformation* track_information);
-  virtual ~TrackInformation();
-   
-  inline void *operator new(size_t);
-  inline void operator delete(void *track_information);
+  public:
+    TrackInformation();
+    TrackInformation(const G4Track* track);
+    TrackInformation(const TrackInformation* track_information);
+    virtual ~TrackInformation();
 
-  TrackInformation& operator =(const TrackInformation& right);
-  
-  inline void PushTrackInformation(const G4Track*);
-  inline void PushTrackInformation(const TrackInformation*);
-  virtual void Print() const;
+    inline void *operator new(size_t);
+    inline void operator delete(void *track_information);
 
-public:
-  inline G4int GetTrackID() const {return track_id_;}
-  inline G4int GetParentID() const {return parent_id_;}
-  inline G4String GetParticleName() const {return particle_name_;}
-  inline G4ThreeVector GetInitialMomentum() const {return initial_momentum_;}
-  inline G4ThreeVector GetInitialPosition() const {return initial_position_;}
-  inline std::vector <G4int> GetParentTrackIDs() const {return parent_track_ids_;}
-  inline std::vector <G4int> GetParentParentIDs() const {return parent_parent_ids_;}
-  inline std::vector <G4String> GetParentParticleNames() const {return parent_particle_names_;}
-  inline std::vector <G4ThreeVector> GetParentInitialMomenta() const {return parent_initial_momenta_;}
-  inline std::vector <G4ThreeVector> GetParentInitialPositions() const {return parent_initial_positions_;}
+    TrackInformation& operator =(const TrackInformation& right);
 
-private:
-  G4int track_id_;
-  G4int parent_id_;
-  G4String particle_name_;
-  G4ThreeVector initial_momentum_;
-  G4ThreeVector initial_position_;
-  std::vector <G4int> parent_track_ids_;
-  std::vector <G4int> parent_parent_ids_;
-  std::vector <G4String> parent_particle_names_;
-  std::vector <G4ThreeVector> parent_initial_momenta_;
-  std::vector <G4ThreeVector> parent_initial_positions_;
+    virtual void Print() const;
+
+    // setter -----------------------------------------------------------------
+    inline void PushTrackInformation(const G4Track*);
+    inline void PushTrackInformation(const TrackInformation*);
+    // getter -----------------------------------------------------------------
+    inline G4int GetTrackID() const {return track_id_;}
+    inline G4int GetParentID() const {return parent_id_;}
+    inline G4String GetParticleName() const {return particle_name_;}
+    inline G4ThreeVector GetInitialMomentum() const {return initial_momentum_;}
+    inline G4ThreeVector GetInitialPosition() const {return initial_position_;}
+    inline std::vector <G4int> GetParentTrackIDs() const {return parent_track_ids_;}
+    inline std::vector <G4int> GetParentParentIDs() const {return parent_parent_ids_;}
+    inline std::vector <G4String> GetParentParticleNames() const {return parent_particle_names_;}
+    inline std::vector <G4ThreeVector> GetParentInitialMomenta() const {return parent_initial_momenta_;}
+    inline std::vector <G4ThreeVector> GetParentInitialPositions() const {return parent_initial_positions_;}
+    // ------------------------------------------------------------------------
+
+  private:
+    G4int track_id_;
+    G4int parent_id_;
+    G4String particle_name_;
+    G4ThreeVector initial_momentum_;
+    G4ThreeVector initial_position_;
+    std::vector <G4int> parent_track_ids_;
+    std::vector <G4int> parent_parent_ids_;
+    std::vector <G4String> parent_particle_names_;
+    std::vector <G4ThreeVector> parent_initial_momenta_;
+    std::vector <G4ThreeVector> parent_initial_positions_;
 };
 
 extern G4ThreadLocal
- G4Allocator<TrackInformation> * aTrackInformationAllocator;
+G4Allocator<TrackInformation> * aTrackInformationAllocator;
 
 inline void* TrackInformation::operator new(size_t)
 {

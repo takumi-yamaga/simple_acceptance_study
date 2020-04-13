@@ -72,24 +72,12 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
 {
   // for segment hit informations -----------------------------------
   auto touchable = step->GetPreStepPoint()->GetTouchable();
-  auto physical = touchable->GetVolume(0);
-  auto segment_id = physical->GetCopyNo();
-  auto logical_volume = physical->GetLogicalVolume();
-  auto segment_translation = touchable->GetHistory()->GetTopTransform().NetTranslation();
-  auto segment_rotation = touchable->GetHistory()->GetTopTransform().NetRotation();
   // ----------------------------------------------------------------
 
   // for particle hit informations ----------------------------------
   auto track = step->GetTrack();
   auto track_id = track->GetTrackID();
   auto parent_id = track->GetParentID();
-  auto particle_definition = track->GetParticleDefinition();
-  auto particle_name = particle_definition->GetParticleName();
-  auto initial_momentum = track->GetVertexMomentumDirection();
-  auto kinetic_energy = track->GetVertexKineticEnergy();
-  auto mass = particle_definition->GetPDGMass();
-  initial_momentum.setMag( sqrt((kinetic_energy-mass)*(kinetic_energy-mass) - mass*mass) );
-  auto initial_position = track->GetVertexPosition();
   auto initial_logical_volume = track->GetLogicalVolumeAtVertex();
   // ----------------------------------------------------------------
 
@@ -110,7 +98,6 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
     // check if this track has hit as present particle --------------
     if(hit->GetPresentParticle()->GetTrackID() == track_id){
       track_already_hit = true;
-      // add new hit data
       hit->PushHitTime(hit_time);
       hit->PushEnergyDeposit(energy_deposit);
       hit->PushHitPosition(hit_position);
@@ -123,7 +110,6 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
     for(auto daughter_particle: daughter_particles){
       if(daughter_particle->GetTrackID() == track_id){
         daughter_already_hit = true;
-        // add new hit data
         hit->PushHitTime(hit_time);
         hit->PushEnergyDeposit(energy_deposit);
         hit->PushHitPosition(hit_position);
@@ -134,73 +120,40 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
     // --------------------------------------------------------------
 
     // check if this track is daughter of present or dauther particle
-    G4int parent_generation = -1;
-    // check if particle generated point is in the segment
     if(hit->GetSegmentHit()->GetLogicalVolume() == initial_logical_volume){ 
-      // check if parent_id is the presnt's particle_id
       if(hit->GetPresentParticle()->GetTrackID() == parent_id){
-        // this track is daughter of the present particle
         daughter_new_hit = true;
-        parent_generation = hit->GetPresentParticle()->GetGeneration();
       }
       else{
         for(auto* daughter_particle: daughter_particles){
-          // check if parent_id is a daughter's particle_id
           if(daughter_particle->GetTrackID() == parent_id){
-            // this track is daughter of a daughter particle
             daughter_new_hit = true;
-            parent_generation = daughter_particle->GetGeneration();
             break;
           }
         } 
       }
-    }
-    if(daughter_new_hit){
-      // add new daughter particle hit
-      ParticleHit* particle_hit = new ParticleHit();
-      particle_hit->SetGeneration(parent_generation+1);
-      particle_hit->SetTrackID(track_id);
-      particle_hit->SetParentID(parent_id);
-      particle_hit->SetParticleName(particle_name);
-      particle_hit->SetInitialMomentum(initial_momentum);
-      particle_hit->SetInitialPosition(initial_position);
-      hit->PushDaughterParticle(particle_hit);
-      // add new hit data
-      hit->PushHitTime(hit_time);
-      hit->PushEnergyDeposit(energy_deposit);
-      hit->PushHitPosition(hit_position);
-      break;
-    }
-    // --------------------------------------------------------------
-  } 
-  // ----------------------------------------------------------------
-
+      if(daughter_new_hit){
+        hit->PushDaughterParticle(track);
+        hit->PushHitTime(hit_time);
+        hit->PushEnergyDeposit(energy_deposit);
+        hit->PushHitPosition(hit_position);
+        break;
+      }
+    } 
+    // ----------------------------------------------------------------
+  }
 
   // if there is no hit of this track, create new hit ---------------
   if(!track_already_hit&&!daughter_already_hit&&!daughter_new_hit){
     auto hit = new DetectorHit();
-    // segment_hit
-    auto segment_hit = new SegmentHit();
-    segment_hit->SetSegmentID(segment_id);
-    segment_hit->SetLogicalVolume(logical_volume);
-    segment_hit->SetTranslation(segment_translation);
-    segment_hit->SetRotation(segment_rotation);
-    hit->SetSegmentHit(segment_hit);
-    // present particle_hit
-    auto particle_hit = new ParticleHit();
-    particle_hit->SetGeneration(0);
-    particle_hit->SetTrackID(track_id);
-    particle_hit->SetParentID(parent_id);
-    particle_hit->SetParticleName(particle_name);
-    particle_hit->SetInitialMomentum(initial_momentum);
-    particle_hit->SetInitialPosition(initial_position);
-    hit->SetPresentParticle(particle_hit);
-    // hit informations including incident_momentum
+
+    hit->SetSegmentHit(touchable);
+    hit->SetPresentParticle(track);
     hit->SetIncidentMomentum(track->GetMomentum());
     hit->PushHitTime(hit_time);
     hit->PushEnergyDeposit(energy_deposit);
     hit->PushHitPosition(hit_position);
-    // add new hit
+
     hits_collection_->insert(hit);
   }
   // ----------------------------------------------------------------

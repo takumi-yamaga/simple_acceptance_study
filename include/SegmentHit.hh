@@ -37,12 +37,15 @@
 #include "G4LogicalVolume.hh"
 #include "G4Transform3D.hh"
 #include "G4RotationMatrix.hh"
+#include "G4VTouchable.hh"
+#include "G4TouchableHistory.hh"
 
 class SegmentHit : public G4VHit
 {
   public:
     SegmentHit();
     SegmentHit(const SegmentHit &right);
+    SegmentHit(const G4VTouchable* touchable);
     virtual ~SegmentHit();
 
     const SegmentHit& operator=(const SegmentHit &right);
@@ -54,18 +57,16 @@ class SegmentHit : public G4VHit
     virtual void Draw();
     virtual void Print();
 
-    // segment informations ---------------------------------------------------
-    // segment_id -------------------------------------------------------------
-    inline void SetSegmentID(const G4int input) { segment_id_ = input; }
+    // setter -----------------------------------------------------------------
+    inline void SetSegmentHit(const G4VTouchable* touchable);
+    inline void SetSegmentID(const G4int input) { segment_id_=input; }
+    inline void SetLogicalVolume(G4LogicalVolume* input) { segment_logical_=input; }
+    inline void SetTranslation(const G4ThreeVector input) { segment_translation_=input; }
+    inline void SetRotation(const G4RotationMatrix input) { segment_rotation_=input; }
+    // getter -----------------------------------------------------------------
     inline G4int GetSegmentID() const { return segment_id_; }
-    // segment_logical --------------------------------------------------------
-    inline void SetLogicalVolume(G4LogicalVolume* input) { segment_logical_ = input; }
     inline G4LogicalVolume* GetLogicalVolume() const { return segment_logical_; }
-    // segment_position -------------------------------------------------------
-    inline void SetTranslation(const G4ThreeVector input) { segment_translation_ = input; }
     inline G4ThreeVector GetTranslation() const { return segment_translation_; }
-    // segment_rotation -------------------------------------------------------
-    inline void SetRotation(const G4RotationMatrix input) { segment_rotation_ = input; }
     inline G4RotationMatrix GetRotation() const { return segment_rotation_; }
     // ------------------------------------------------------------------------
 
@@ -92,6 +93,14 @@ inline void* SegmentHit::operator new(size_t)
 inline void SegmentHit::operator delete(void* aHit)
 {
   SegmentHitAllocator->FreeSingle((SegmentHit*) aHit);
+}
+
+inline void SegmentHit::SetSegmentHit(const G4VTouchable* touchable)
+{
+  segment_id_ = touchable->GetVolume(0)->GetCopyNo();
+  segment_logical_ = touchable->GetVolume(0)->GetLogicalVolume();
+  segment_translation_ = touchable->GetHistory()->GetTopTransform().NetTranslation();
+  segment_rotation_ = touchable->GetHistory()->GetTopTransform().NetRotation();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

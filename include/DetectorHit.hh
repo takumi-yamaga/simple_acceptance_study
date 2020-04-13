@@ -30,15 +30,16 @@
 #ifndef DetectorHit_h
 #define DetectorHit_h 1
 
+#include "SegmentHit.hh"
+#include "ParticleHit.hh"
+#include "TrackInformation.hh"
+
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
 
 #include <vector>
-
-class SegmentHit;
-class ParticleHit;
 
 class DetectorHit : public G4VHit
 {
@@ -56,40 +57,24 @@ class DetectorHit : public G4VHit
     virtual void Draw();
     virtual void Print();
 
-    // segment informations ---------------------------------------------------
-    inline void SetSegmentHit(SegmentHit* input) { segment_hit_ = input; }
-    inline SegmentHit* GetSegmentHit() const { return segment_hit_; }
-    // present particle -------------------------------------------------------
-    inline void SetPresentParticle(ParticleHit* input) { present_particle_ = input; }
-    inline ParticleHit* GetPresentParticle() const { return present_particle_; }
-    // parent particles -------------------------------------------------------
-    inline void PushParentParticle(ParticleHit* input) { parent_particles_.push_back(input); }
-    inline std::vector <ParticleHit*> GetParentParticles() const { return parent_particles_; }
-    inline void SetParentParticle(const G4int i, ParticleHit* input);
-    inline ParticleHit* GetParentParticle(const G4int i) const;
-    // daughter particles -------------------------------------------------------
-    inline void PushDaughterParticle(ParticleHit* input) { daughter_particles_.push_back(input); }
-    inline std::vector <ParticleHit*> GetDaughterParticles() const { return daughter_particles_; }
-    inline void SetDaughterParticle(const G4int i, ParticleHit* input);
-    inline ParticleHit* GetDaughterParticle(const G4int i) const;
-    // incident momentum --------------------------------------------------------
+    // setter -----------------------------------------------------------------
+    inline void SetSegmentHit(const G4VTouchable* touchable);
+    inline void SetPresentParticle(const G4Track* track);
+    inline void PushDaughterParticle(const G4Track* track);
     inline void SetIncidentMomentum(const G4ThreeVector input) { incident_momentum_ = input; }
-    inline G4ThreeVector GetIncidentMomentum() const { return incident_momentum_; }
-    // hit time -----------------------------------------------------------------
     inline void PushHitTime(G4double input) { hit_times_.push_back(input); }
-    inline std::vector <G4double> GetHitTimes() const { return hit_times_; }
-    inline void SetHitTime(const G4int i, G4double input);
-    inline G4double GetHitTime(const G4int i) const;
-    // energy deposit -----------------------------------------------------------
     inline void PushEnergyDeposit(G4double input) { energy_deposits_.push_back(input); }
-    inline std::vector <G4double> GetEnergyDeposits() const { return energy_deposits_; }
-    inline void SetEnergyDeposit(const G4int i, G4double input);
-    inline G4double GetEnergyDeposit(const G4int i) const;
-    // hit position -------------------------------------------------------------
     inline void PushHitPosition(G4ThreeVector input) { hit_positions_.push_back(input); }
+    // getter -----------------------------------------------------------------
+    inline SegmentHit* GetSegmentHit() const { return segment_hit_; }
+    inline ParticleHit* GetPresentParticle() const { return present_particle_; }
+    inline std::vector <ParticleHit*> GetParentParticles() const { return parent_particles_; }
+    inline std::vector <ParticleHit*> GetDaughterParticles() const { return daughter_particles_; }
+    inline G4ThreeVector GetIncidentMomentum() const { return incident_momentum_; }
+    inline std::vector <G4double> GetHitTimes() const { return hit_times_; }
+    inline std::vector <G4double> GetEnergyDeposits() const { return energy_deposits_; }
     inline std::vector <G4ThreeVector> GetHitPositions() const { return hit_positions_; }
-    inline void SetHitPosition(const G4int i, G4ThreeVector input);
-    inline G4ThreeVector GetHitPosition(const G4int i) const;
+    // ------------------------------------------------------------------------
 
   private:
     // segment information
@@ -126,117 +111,54 @@ inline void DetectorHit::operator delete(void* aHit)
 {
   DetectorHitAllocator->FreeSingle((DetectorHit*) aHit);
 }
-// parent particle --------------------------------------------------
-inline void DetectorHit::SetParentParticle(const G4int i, ParticleHit* input){
-  if(i<(G4int)parent_particles_.size()){
-    parent_particles_[i] = input;
+// segment hit ------------------------------------------------------
+inline void DetectorHit::SetSegmentHit(const G4VTouchable* touchable){
+  if(touchable){
+    if(segment_hit_)  delete segment_hit_;
+    segment_hit_ = new SegmentHit(touchable);
   }
   else{
     G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::SetParentParticle()", "", EventMustBeAborted, msg);
+    msg << "No touchable" << G4endl; 
+    G4Exception("DetectorHit::SetSegmentHit()", "", EventMustBeAborted, msg);
   }
 }
-inline ParticleHit* DetectorHit::GetParentParticle(const G4int i=0) const{
-  if(i<(G4int)parent_particles_.size()){
-    return parent_particles_[i];
+// present particle -------------------------------------------------
+inline void DetectorHit::SetPresentParticle(const G4Track* track){
+  if(track){
+    if(present_particle_)  delete present_particle_;
+    present_particle_ = new ParticleHit(track);
+    TrackInformation* track_information = (TrackInformation*)track->GetUserInformation();
+    for(G4int generation = 0; generation<present_particle_->GetGeneration(); generation++){
+      ParticleHit* parent_particle = new ParticleHit();
+      parent_particle->SetGeneration(generation);
+      parent_particle->SetTrackID(track_information->GetParentTrackIDs()[generation]);
+      parent_particle->SetParentID(track_information->GetParentParentIDs()[generation]);
+      parent_particle->SetParticleName(track_information->GetParentParticleNames()[generation]);
+      parent_particle->SetInitialMomentum(track_information->GetParentInitialMomenta()[generation]);
+      parent_particle->SetInitialMomentum(track_information->GetParentInitialMomenta()[generation]);
+      parent_particle->SetInitialPosition(track_information->GetParentInitialPositions()[generation]);
+      parent_particles_.push_back(parent_particle);
+    }
   }
   else{
     G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::GetParentParticle(G4int)", "", EventMustBeAborted, msg);
-    return nullptr;
+    msg << "No track" << G4endl; 
+    G4Exception("DetectorHit::SetPresentParticle()", "", EventMustBeAborted, msg);
   }
 }
-// daughter particle -------------------------------------------------
-inline void DetectorHit::SetDaughterParticle(const G4int i, ParticleHit* input){
-  if(i<(G4int)daughter_particles_.size()){
-    daughter_particles_[i] = input;
+// daughter article -------------------------------------------------
+inline void DetectorHit::PushDaughterParticle(const G4Track* track){
+  if(track){
+    ParticleHit* daughter_particle = new ParticleHit(track);
+    daughter_particles_.push_back(daughter_particle);
   }
   else{
     G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
+    msg << "No track" << G4endl; 
     G4Exception("DetectorHit::SetDaughterParticle()", "", EventMustBeAborted, msg);
   }
 }
-inline ParticleHit* DetectorHit::GetDaughterParticle(const G4int i=0) const{
-  if(i<(G4int)daughter_particles_.size()){
-    return daughter_particles_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::GetDaughterParticle(G4int)", "", EventMustBeAborted, msg);
-    return nullptr;
-  }
-}
-// hit time ----------------------------------------------------------
-inline void DetectorHit::SetHitTime(const G4int i, G4double input){
-  if(i<(G4int)hit_times_.size()){
-    hit_times_[i] = input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::SetHitTime()", "", EventMustBeAborted, msg);
-  }
-}
-inline G4double DetectorHit::GetHitTime(const G4int i=0) const{
-  if(i<(G4int)hit_times_.size()){
-    return hit_times_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::GetHitTime(G4int)", "", EventMustBeAborted, msg);
-    return -999.;
-  }
-}
-// energy deposit ----------------------------------------------------
-inline void DetectorHit::SetEnergyDeposit(const G4int i, G4double input){
-  if(i<(G4int)energy_deposits_.size()){
-    energy_deposits_[i] = input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::SetEnergyDeposit()", "", EventMustBeAborted, msg);
-  }
-}
-inline G4double DetectorHit::GetEnergyDeposit(const G4int i=0) const{
-  if(i<(G4int)energy_deposits_.size()){
-    return energy_deposits_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::GetEnergyDeposit(G4int)", "", EventMustBeAborted, msg);
-    return -999.;
-  }
-}
-// hit position ------------------------------------------------------
-inline void DetectorHit::SetHitPosition(const G4int i, G4ThreeVector input){
-  if(i<(G4int)hit_positions_.size()){
-    hit_positions_[i] = input;
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::SetHitPosition()", "", EventMustBeAborted, msg);
-  }
-}
-inline G4ThreeVector DetectorHit::GetHitPosition(const G4int i=0) const{
-  if(i<(G4int)hit_positions_.size()){
-    return hit_positions_[i];
-  }
-  else{
-    G4ExceptionDescription msg;
-    msg << "No hits found." << G4endl; 
-    G4Exception("DetectorHit::GetHitPosition(G4int)", "", EventMustBeAborted, msg);
-    return G4ThreeVector(0.);
-  }
-}
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif

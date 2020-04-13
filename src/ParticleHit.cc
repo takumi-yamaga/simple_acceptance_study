@@ -52,7 +52,6 @@ ParticleHit::~ParticleHit()
 
 ParticleHit::ParticleHit(const ParticleHit &right)
   : G4VHit(),
-  // hit particle
   generation_(right.generation_),
   track_id_(right.track_id_),
   parent_id_(right.parent_id_),
@@ -60,6 +59,14 @@ ParticleHit::ParticleHit(const ParticleHit &right)
   initial_momentum_(right.initial_momentum_),
   initial_position_(right.initial_position_)
 {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+ParticleHit::ParticleHit(const G4Track* track)
+  : G4VHit()
+{
+  this->SetParticleHit(track);
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
