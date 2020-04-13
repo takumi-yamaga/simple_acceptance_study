@@ -71,5 +71,6 @@ TrackInformation::~TrackInformation()
 void TrackInformation::Print() const
 {
   G4cout << "track_id : " << track_id_ << " (" << particle_name_ << ")" << G4endl;
+  G4cout << "total parent particles : " << parent_track_ids_.size() << G4endl;
 }
 

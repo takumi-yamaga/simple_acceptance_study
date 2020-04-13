@@ -26,8 +26,8 @@ public:
 
   TrackInformation& operator =(const TrackInformation& right);
   
-  inline void PushTrackInformation();
-  inline void SetTrackInformation(const G4Track* track);
+  inline void PushTrackInformation(const G4Track*);
+  inline void PushTrackInformation(const TrackInformation*);
   virtual void Print() const;
 
 public:
@@ -65,29 +65,43 @@ inline void* TrackInformation::operator new(size_t)
   return (void*)aTrackInformationAllocator->MallocSingle();
 }
 
-inline void TrackInformation::operator delete(void *aTrackInfo)
-{ aTrackInformationAllocator->FreeSingle((TrackInformation*)aTrackInfo);}
+inline void TrackInformation::operator delete(void *track_information)
+{ aTrackInformationAllocator->FreeSingle((TrackInformation*)track_information);}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-inline void TrackInformation::PushTrackInformation()
+inline void TrackInformation::PushTrackInformation(const G4Track* track)
 {
-  parent_track_ids_.push_back(track_id_);
-  parent_parent_ids_.push_back(parent_id_);
-  parent_particle_names_.push_back(particle_name_);
-  parent_initial_momenta_.push_back(initial_momentum_);
-  parent_initial_positions_.push_back(initial_position_);
-}
+  // push current track_information as the newest parent_information
+  parent_track_ids_.push_back(this->track_id_);
+  parent_parent_ids_.push_back(this->parent_id_);
+  parent_particle_names_.push_back(this->particle_name_);
+  parent_initial_momenta_.push_back(this->initial_momentum_);
+  parent_initial_positions_.push_back(this->initial_position_);
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-inline void TrackInformation::SetTrackInformation(const G4Track* track)
-{
-  if(track_id_!=-1) PushTrackInformation();
-
+  // set current track_information
   track_id_ = track->GetTrackID();
   parent_id_ = track->GetParentID();
   particle_name_ = track->GetParticleDefinition()->GetParticleName();
   initial_momentum_ = track->GetMomentum();
   initial_position_ = track->GetPosition();
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+inline void TrackInformation::PushTrackInformation(const TrackInformation* track_information)
+{
+  // push current track_information as the newest parent_information
+  parent_track_ids_.push_back(this->track_id_);
+  parent_parent_ids_.push_back(this->parent_id_);
+  parent_particle_names_.push_back(this->particle_name_);
+  parent_initial_momenta_.push_back(this->initial_momentum_);
+  parent_initial_positions_.push_back(this->initial_position_);
+
+  // set current track_information
+  track_id_ = track_information->track_id_;
+  parent_id_ = track_information->parent_id_;
+  particle_name_ = track_information->particle_name_;
+  initial_momentum_ = track_information->initial_momentum_;
+  initial_position_ = track_information->initial_position_;
 }
 
 #endif

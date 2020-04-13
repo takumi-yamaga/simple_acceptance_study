@@ -23,48 +23,37 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
+/// \file runAndEvent/RE01/include/RE01StackingAction.hh
+/// \brief Definition of the RE01StackingAction class
 //
-/// \copied from B5ActionInitialization.cc
-/// \brief Implementation of the ActionInitialization class
+//
 
-#include "ActionInitialization.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "StackingAction.hh"
-#include "TrackingAction.hh"
-#include "RunAction.hh"
-#include "EventAction.hh"
+#ifndef RE01StackingAction_H
+#define RE01StackingAction_H 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#include "globals.hh"
+#include "G4UserStackingAction.hh"
 
-ActionInitialization::ActionInitialization()
- : G4VUserActionInitialization()
-{}
+class G4Track;
+class G4VHitsCollection;
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-ActionInitialization::~ActionInitialization()
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void ActionInitialization::BuildForMaster() const
+class RE01StackingAction : public G4UserStackingAction
 {
-  SetUserAction(new RunAction);
-}
+public:
+  RE01StackingAction();
+  virtual ~RE01StackingAction();
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+public:
+  virtual G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track* aTrack);
+  virtual void NewStage();
+  virtual void PrepareNewEvent();
 
-void ActionInitialization::Build() const
-{
-  SetUserAction(new PrimaryGeneratorAction());
+private:
+  G4VHitsCollection* GetCalCollection();
+  
+  G4int fStage;
+  G4int fCalorimeterHitsColID;
+};
 
-  SetUserAction(new StackingAction());
+#endif
 
-  SetUserAction(new TrackingAction());
-
-  SetUserAction(new EventAction());
-
-  SetUserAction(new RunAction());
-}  
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

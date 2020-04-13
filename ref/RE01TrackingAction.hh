@@ -23,48 +23,25 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
+/// \file runAndEvent/RE01/include/RE01TrackingAction.hh
+/// \brief Definition of the RE01TrackingAction class
 //
-/// \copied from B5ActionInitialization.cc
-/// \brief Implementation of the ActionInitialization class
+//
 
-#include "ActionInitialization.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "StackingAction.hh"
-#include "TrackingAction.hh"
-#include "RunAction.hh"
-#include "EventAction.hh"
+#ifndef RE01TrackingAction_h
+#define RE01TrackingAction_h 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#include "G4UserTrackingAction.hh"
 
-ActionInitialization::ActionInitialization()
- : G4VUserActionInitialization()
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-ActionInitialization::~ActionInitialization()
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void ActionInitialization::BuildForMaster() const
+class RE01TrackingAction : public G4UserTrackingAction 
 {
-  SetUserAction(new RunAction);
-}
+public:
+  RE01TrackingAction();
+  virtual ~RE01TrackingAction(){};
+   
+  virtual void PreUserTrackingAction(const G4Track*);
+  virtual void PostUserTrackingAction(const G4Track*);
+  
+};
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void ActionInitialization::Build() const
-{
-  SetUserAction(new PrimaryGeneratorAction());
-
-  SetUserAction(new StackingAction());
-
-  SetUserAction(new TrackingAction());
-
-  SetUserAction(new EventAction());
-
-  SetUserAction(new RunAction());
-}  
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#endif
