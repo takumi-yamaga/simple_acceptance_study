@@ -144,11 +144,11 @@ G4bool HodoscopeSD::ProcessHits(G4Step* step, G4TouchableHistory*)
   }
 
   // if there is no hit of this track, create new hit ---------------
-  if(!track_already_hit&&!daughter_already_hit&&!daughter_new_hit){
+  if(!track_already_hit && !daughter_already_hit && !daughter_new_hit){
     auto hit = new DetectorHit();
 
     hit->SetSegmentHit(touchable);
-    hit->SetPresentParticle(track);
+    hit->SetPresentParticle(track); // parent informations are also stored.
     hit->SetIncidentMomentum(track->GetMomentum());
     hit->PushHitTime(hit_time);
     hit->PushEnergyDeposit(energy_deposit);
