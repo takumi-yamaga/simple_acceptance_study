@@ -23,48 +23,56 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
+/// \file runAndEvent/RE01/src/RE01TrackingAction.cc
+/// \brief Implementation of the RE01TrackingAction class
 //
-/// \copied from B5ActionInitialization.cc
-/// \brief Implementation of the ActionInitialization class
+//
 
-#include "ActionInitialization.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "StackingAction.hh"
-#include "TrackingAction.hh"
-#include "RunAction.hh"
-#include "EventAction.hh"
+#include "RE01TrackingAction.hh"
+#include "RE01Trajectory.hh"
+#include "RE01TrackInformation.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#include "G4TrackingManager.hh"
+#include "G4Track.hh"
 
-ActionInitialization::ActionInitialization()
- : G4VUserActionInitialization()
-{}
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo...... 
+RE01TrackingAction::RE01TrackingAction()
+:G4UserTrackingAction()
+{;}
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-ActionInitialization::~ActionInitialization()
-{}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void ActionInitialization::BuildForMaster() const
+void RE01TrackingAction::PreUserTrackingAction(const G4Track* aTrack)
 {
-  SetUserAction(new RunAction);
+  // Create trajectory only for track in tracking region
+  RE01TrackInformation* trackInfo = 
+    (RE01TrackInformation*)(aTrack->GetUserInformation());
+
+  if(trackInfo->GetTrackingStatus() > 0)
+  {
+    fpTrackingManager->SetStoreTrajectory(true);
+    fpTrackingManager->SetTrajectory(new RE01Trajectory(aTrack));
+  }
+  else
+  { fpTrackingManager->SetStoreTrajectory(false); }
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void ActionInitialization::Build() const
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo...... 
+void RE01TrackingAction::PostUserTrackingAction(const G4Track* aTrack)
 {
-  SetUserAction(new PrimaryGeneratorAction());
+  G4TrackVector* secondaries = fpTrackingManager->GimmeSecondaries();
+  if(secondaries)
+  {
+    RE01TrackInformation* info = 
+      (RE01TrackInformation*)(aTrack->GetUserInformation());
+    size_t nSeco = secondaries->size();
+    if(nSeco>0)
+    {
+      for(size_t i=0;i<nSeco;i++)
+      { 
+        RE01TrackInformation* infoNew = new RE01TrackInformation(info);
+        (*secondaries)[i]->SetUserInformation(infoNew);
+      }
+    }
+  }
+}
 
-  SetUserAction(new StackingAction());
 
-  SetUserAction(new TrackingAction());
-
-  SetUserAction(new EventAction());
-
-  SetUserAction(new RunAction());
-}  
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

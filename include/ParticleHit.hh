@@ -30,6 +30,8 @@
 #ifndef ParticleHit_h
 #define ParticleHit_h 1
 
+#include "TrackInformation.hh"
+
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
@@ -40,6 +42,7 @@ class ParticleHit : public G4VHit
   public:
     ParticleHit();
     ParticleHit(const ParticleHit &right);
+    ParticleHit(const G4Track* track);
     virtual ~ParticleHit();
 
     const ParticleHit& operator=(const ParticleHit &right);
@@ -50,24 +53,19 @@ class ParticleHit : public G4VHit
 
     virtual void Print();
 
-    // hit particle informations ----------------------------------------------
-    // generation -------------------------------------------------------------
-    inline void SetGeneration(const G4int input) { generation_ = input; }
+    // setter -----------------------------------------------------------------
+    inline void SetParticleHit(const G4Track* track);
+    inline void SetGeneration(const G4int input){ generation_=input; }
+    inline void SetTrackID(const G4int input){ track_id_=input; }
+    inline void SetParentID(const G4int input){ parent_id_=input; }
+    inline void SetParticleName(const G4String input){ particle_name_=input; }
+    inline void SetInitialMomentum(const G4ThreeVector input){ initial_momentum_=input; }
+    inline void SetInitialPosition(const G4ThreeVector input){ initial_position_=input; }
+    // getter -----------------------------------------------------------------
     inline G4int GetGeneration() const { return generation_; }
-    // track_id ---------------------------------------------------------------
-    inline void SetTrackID(const G4int input) { track_id_ = input; }
     inline G4int GetTrackID() const { return track_id_; }
-    // parent_id --------------------------------------------------------------
-    inline void SetParentID(const G4int input) { parent_id_ = input; }
-    inline G4int GetParentID() const { return parent_id_; }
-    // particle_name ----------------------------------------------------------
-    inline void SetParticleName(const G4String input) { particle_name_ = input; }
-    inline G4String GetParticleName() const { return particle_name_; }
-    // initial_momentum -------------------------------------------------------
-    inline void SetInitialMomentum(const G4ThreeVector input) { initial_momentum_ = input; }
+    inline G4int GetParentID() const { return parent_id_; } inline G4String GetParticleName() const { return particle_name_; }
     inline G4ThreeVector GetInitialMomentum() const { return initial_momentum_; }
-    // initial_position -------------------------------------------------------
-    inline void SetInitialPosition(const G4ThreeVector input) { initial_position_ = input; }
     inline G4ThreeVector GetInitialPosition() const { return initial_position_; }
     // ------------------------------------------------------------------------
     
@@ -96,6 +94,17 @@ inline void* ParticleHit::operator new(size_t)
 inline void ParticleHit::operator delete(void* aHit)
 {
   ParticleHitAllocator->FreeSingle((ParticleHit*) aHit);
+}
+
+inline void ParticleHit::SetParticleHit(const G4Track* track)
+{
+  TrackInformation* track_information = (TrackInformation*)track->GetUserInformation();
+  generation_ = (G4int)track_information->GetParentTrackIDs().size();
+  track_id_ = track_information->GetTrackID();
+  parent_id_ = track_information->GetParentID();
+  particle_name_ = track_information->GetParticleName();
+  initial_momentum_ = track_information->GetInitialMomentum();
+  initial_position_ = track_information->GetInitialPosition();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
